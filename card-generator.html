@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>威胁牌生成器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+h1 { text-align: center; margin-bottom: 10px; color: #e94560; }
+.controls { text-align: center; margin-bottom: 20px; }
+.controls button {
+  padding: 12px 24px; margin: 5px; border: none; border-radius: 8px;
+  font-size: 16px; cursor: pointer; transition: all 0.2s;
+}
+.btn-generate { background: #e94560; color: white; }
+.btn-generate:hover { background: #ff6b6b; }
+.btn-download { background: #0f3460; color: white; }
+.btn-download:hover { background: #16537e; }
+.status { text-align: center; margin: 10px 0; color: #aaa; }
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; padding: 10px;
+}
+.card-item { text-align: center; }
+.card-item canvas { width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.card-item .label { font-size: 11px; margin-top: 4px; color: #888; }
+</style>
+</head>
+<body>
+<h1>威胁牌卡牌生成器（94张基础牌）</h1>
+<div class="controls">
+  <button class="btn-generate" onclick="generateBatch('食人鱼')">生成 食人鱼</button>
+  <button class="btn-generate" onclick="generateBatch('蛇')">生成 蛇</button>
+  <button class="btn-generate" onclick="generateBatch('鳄鱼')">生成 鳄鱼</button>
+  <button class="btn-generate" onclick="generateBatch('蜘蛛')">生成 蜘蛛</button>
+  <button class="btn-generate" onclick="generateBatch('蝎子')">生成 蝎子</button>
+  <button class="btn-generate" onclick="generateBatch('分裂')">生成 分裂牌</button>
+  <button class="btn-generate" style="background:#16537e" onclick="generateAll()">生成全部94张</button>
+  <button class="btn-download" onclick="downloadAll()">批量下载 (ZIP)</button>
+</div>
+<div class="status" id="status">点击"生成"开始合成卡牌</div>
+<div class="card-grid" id="cardGrid"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ===== 卡牌数据（94张基础牌，严格按新表格） =====
+const CARDS = [
+  // --- 蛇 (18张): 威胁值3, 宝藏 5x3 + 3x9 + 2x6 ---
+  {id:1,type:'蛇',kind:'普通',threat:3,treasure:5},
+  {id:2,type:'蛇',kind:'普通',threat:3,treasure:5},
+  {id:3,type:'蛇',kind:'普通',threat:3,treasure:5},
+  {id:4,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:5,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:6,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:7,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:8,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:9,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:10,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:11,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:12,type:'蛇',kind:'普通',threat:3,treasure:3},
+  {id:13,type:'蛇',kind:'普通',threat:3,treasure:2},
+  {id:14,type:'蛇',kind:'普通',threat:3,treasure:2},
+  {id:15,type:'蛇',kind:'普通',threat:3,treasure:2},
+  {id:16,type:'蛇',kind:'普通',threat:3,treasure:2},
+  {id:17,type:'蛇',kind:'普通',threat:3,treasure:2},
+  {id:18,type:'蛇',kind:'普通',threat:3,treasure:2},
+  // --- 食人鱼 (18张): 威胁值3, 宝藏 5x3 + 3x9 + 2x6 ---
+  {id:19,type:'食人鱼',kind:'普通',threat:3,treasure:5},
+  {id:20,type:'食人鱼',kind:'普通',threat:3,treasure:5},
+  {id:21,type:'食人鱼',kind:'普通',threat:3,treasure:5},
+  {id:22,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:23,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:24,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:25,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:26,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:27,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:28,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:29,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:30,type:'食人鱼',kind:'普通',threat:3,treasure:3},
+  {id:31,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  {id:32,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  {id:33,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  {id:34,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  {id:35,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  {id:36,type:'食人鱼',kind:'普通',threat:3,treasure:2},
+  // --- 鳄鱼 (18张): 普通15张(威胁4, 宝藏 5x6 + 3x6 + 2x3) + 死亡愿望3张(威胁0) ---
+  {id:37,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:38,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:39,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:40,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:41,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:42,type:'鳄鱼',kind:'普通',threat:4,treasure:5},
+  {id:43,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:44,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:45,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:46,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:47,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:48,type:'鳄鱼',kind:'普通',threat:4,treasure:3},
+  {id:49,type:'鳄鱼',kind:'普通',threat:4,treasure:2},
+  {id:50,type:'鳄鱼',kind:'普通',threat:4,treasure:2},
+  {id:51,type:'鳄鱼',kind:'普通',threat:4,treasure:2},
+  {id:52,type:'鳄鱼',kind:'死亡愿望',threat:0,treasure:0},
+  {id:53,type:'鳄鱼',kind:'死亡愿望',threat:0,treasure:0},
+  {id:54,type:'鳄鱼',kind:'死亡愿望',threat:0,treasure:0},
+  // --- 蜘蛛 (18张): 普通15张(威胁5x6宝藏5 + 威胁2x6宝藏3 + 威胁2x3宝藏2) + 鸡毛3张(威胁5) ---
+  {id:55,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:56,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:57,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:58,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:59,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:60,type:'蜘蛛',kind:'普通',threat:5,treasure:5},
+  {id:61,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:62,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:63,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:64,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:65,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:66,type:'蜘蛛',kind:'普通',threat:2,treasure:3},
+  {id:67,type:'蜘蛛',kind:'普通',threat:2,treasure:2},
+  {id:68,type:'蜘蛛',kind:'普通',threat:2,treasure:2},
+  {id:69,type:'蜘蛛',kind:'普通',threat:2,treasure:2},
+  {id:70,type:'蜘蛛',kind:'鸡毛',threat:5,treasure:0},
+  {id:71,type:'蜘蛛',kind:'鸡毛',threat:5,treasure:0},
+  {id:72,type:'蜘蛛',kind:'鸡毛',threat:5,treasure:0},
+  // --- 蝎子 (18张): 普通15张(威胁5x6宝藏5 + 威胁2x6宝藏3 + 威胁2x3宝藏2) + 鸡毛3张(威胁5) ---
+  {id:73,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:74,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:75,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:76,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:77,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:78,type:'蝎子',kind:'普通',threat:5,treasure:5},
+  {id:79,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:80,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:81,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:82,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:83,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:84,type:'蝎子',kind:'普通',threat:2,treasure:3},
+  {id:85,type:'蝎子',kind:'普通',threat:2,treasure:2},
+  {id:86,type:'蝎子',kind:'普通',threat:2,treasure:2},
+  {id:87,type:'蝎子',kind:'普通',threat:2,treasure:2},
+  {id:88,type:'蝎子',kind:'鸡毛',threat:5,treasure:0},
+  {id:89,type:'蝎子',kind:'鸡毛',threat:5,treasure:0},
+  {id:90,type:'蝎子',kind:'鸡毛',threat:5,treasure:0},
+  // --- 分裂牌 (4张): 蛇+食人鱼, 威胁3/3, 宝藏2 ---
+  {id:91,type:'蛇+食人鱼',kind:'分裂',threat:'3/3',treasure:2},
+  {id:92,type:'蛇+食人鱼',kind:'分裂',threat:'3/3',treasure:2},
+  {id:93,type:'蛇+食人鱼',kind:'分裂',threat:'3/3',treasure:2},
+  {id:94,type:'蛇+食人鱼',kind:'分裂',threat:'3/3',treasure:2},
+];
+
+// ===== 资源路径 =====
+const BASE = 'assets/ris';
+const TYPE_MAP = {
+  '蛇': 'snake',
+  '食人鱼': 'piranha',
+  '鳄鱼': 'crocodile',
+  '蜘蛛': 'spider',
+  '蝎子': 'scorpion',
+};
+const PATHS = {
+  bg: (type) => {
+    const t = type.includes('+') ? type.split('+')[0] : type;
+    return `${BASE}/bg/${TYPE_MAP[t]}.jpeg`;
+  },
+  bg2: (type) => {
+    const t = type.split('+')[1];
+    return `${BASE}/bg/${TYPE_MAP[t]}.jpeg`;
+  },
+  treasure: (val) => `${BASE}/treasure/${val}.png`,
+  threat: (val) => `${BASE}/numbers/${val}.png`,
+  feather: `${BASE}/feather.png`,
+  deathWish: `${BASE}/deathwish.png`,
+};
+
+// ===== 图片加载缓存 =====
+const imageCache = {};
+function loadImage(src) {
+  if (imageCache[src]) return Promise.resolve(imageCache[src]);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => { imageCache[src] = img; resolve(img); };
+    img.onerror = () => reject(new Error(`Failed to load: ${src}`));
+    img.src = src;
+  });
+}
+
+// ===== 卡牌尺寸 =====
+const CARD_W = 731;
+const CARD_H = 1024;
+
+// ===== 卡牌渲染 =====
+async function renderCard(card) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_W;
+  canvas.height = CARD_H;
+  const ctx = canvas.getContext('2d');
+
+  if (card.kind === '分裂') {
+    await drawSplitCard(ctx, card);
+  } else {
+    const bgImg = await loadImage(PATHS.bg(card.type));
+    ctx.drawImage(bgImg, 0, 0, CARD_W, CARD_H);
+
+    if (card.kind === '普通') {
+      await drawTreasure(ctx, card.treasure);
+      await drawThreat(ctx, card.threat);
+    } else if (card.kind === '鸡毛') {
+      await drawFeather(ctx);
+      await drawThreat(ctx, 5);
+    } else if (card.kind === '死亡愿望') {
+      await drawDeathWish(ctx);
+      await drawThreat(ctx, 0);
+    }
+  }
+
+  return canvas;
+}
+
+// 绘制宝藏值（左上角偏右）
+async function drawTreasure(ctx, val) {
+  const img = await loadImage(PATHS.treasure(val));
+  const targetH = CARD_H * 0.30;
+  const scale = targetH / img.height;
+  const targetW = img.width * scale;
+  ctx.drawImage(img, CARD_W * 0.12, 0, targetW, targetH);
+}
+
+// 绘制威胁值（右上方）
+async function drawThreat(ctx, val) {
+  const img = await loadImage(PATHS.threat(val));
+  const targetH = CARD_H * 0.25;
+  const scale = targetH / img.height;
+  const targetW = img.width * scale;
+  const x = CARD_W * 0.70 - targetW / 2;
+  const y = CARD_H * 0.06;
+  ctx.drawImage(img, x, y, targetW, targetH);
+}
+
+// 绘制分裂牌（对角线分割 + 180°旋转对称）
+async function drawSplitCard(ctx, card) {
+  const bg1 = await loadImage(PATHS.bg(card.type));
+  const bg2 = await loadImage(PATHS.bg2(card.type));
+  const parts = card.threat.split('/').map(Number);
+
+  // === 上半区域（左上梯形）：第一种威胁类型 ===
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(CARD_W, 0);
+  ctx.lineTo(CARD_W, CARD_H * 0.65);
+  ctx.lineTo(0, CARD_H * 0.35);
+  ctx.closePath();
+  ctx.clip();
+  let bg1OffsetY = -CARD_H * 0.15;
+  ctx.drawImage(bg1, 0, bg1OffsetY, CARD_W, CARD_H);
+  ctx.restore();
+
+  // === 下半区域（右下梯形）：第二种威胁类型 ===
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, CARD_H * 0.35);
+  ctx.lineTo(CARD_W, CARD_H * 0.65);
+  ctx.lineTo(CARD_W, CARD_H);
+  ctx.lineTo(0, CARD_H);
+  ctx.closePath();
+  ctx.clip();
+  // 旋转180°绘制底图
+  ctx.translate(CARD_W, CARD_H);
+  ctx.rotate(Math.PI);
+  ctx.drawImage(bg2, 0, 0, CARD_W, CARD_H);
+  ctx.restore();
+
+  // === 对角线分割线（粗黑线） ===
+  ctx.save();
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 8;
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, CARD_H * 0.35);
+  ctx.lineTo(CARD_W, CARD_H * 0.65);
+  ctx.stroke();
+  ctx.restore();
+
+  // === 上半区域：宝藏值（左上角）+ 威胁值（右上方） ===
+  const treasureImg = await loadImage(PATHS.treasure(card.treasure));
+  const treasureH = CARD_H * 0.30;
+  const treasureScale = treasureH / treasureImg.height;
+  const treasureW = treasureImg.width * treasureScale;
+  ctx.drawImage(treasureImg, CARD_W * 0.12, 10, treasureW, treasureH);
+
+  // 威胁值 - 右上方
+  const tImg1 = await loadImage(PATHS.threat(parts[0]));
+  const threatH = CARD_H * 0.22;
+  const s1 = threatH / tImg1.height;
+  const w1 = tImg1.width * s1;
+  const x1 = CARD_W * 0.65 - w1 / 2;
+  const y1 = CARD_H * 0.03;
+  ctx.drawImage(tImg1, x1, y1, w1, threatH);
+
+  // === 下半区域：宝藏值（右下角，旋转180°）+ 威胁值（左下方，旋转180°） ===
+  // 威胁值 - 左下方，旋转180°
+  const tImg2 = await loadImage(PATHS.threat(parts[1]));
+  const s2 = threatH / tImg2.height;
+  const w2 = tImg2.width * s2;
+  const x2 = CARD_W * 0.35 - w2 / 2;
+  const y2 = CARD_H * 0.95 - threatH;
+  ctx.save();
+  ctx.translate(x2 + w2 / 2, y2 + threatH / 2);
+  ctx.rotate(Math.PI);
+  ctx.drawImage(tImg2, -w2 / 2, -threatH / 2, w2, threatH);
+  ctx.restore();
+
+  // 宝藏值 - 右下角，旋转180°
+  ctx.save();
+  const tx = CARD_W - CARD_W * 0.12 - treasureW / 2;
+  const ty = CARD_H - 10 - treasureH / 2;
+  ctx.translate(tx, ty);
+  ctx.rotate(Math.PI);
+  ctx.drawImage(treasureImg, -treasureW / 2, -treasureH / 2, treasureW, treasureH);
+  ctx.restore();
+}
+
+// 绘制鸡毛牌标识（左上角偏右）
+async function drawFeather(ctx) {
+  const img = await loadImage(PATHS.feather);
+  const targetH = CARD_H * 0.22;
+  const scale = targetH / img.height;
+  const targetW = img.width * scale;
+  ctx.drawImage(img, CARD_W * 0.12, 0, targetW, targetH);
+}
+
+// 绘制死亡威胁标识（左上角偏右）
+async function drawDeathWish(ctx) {
+  const img = await loadImage(PATHS.deathWish);
+  const targetH = CARD_H * 0.22;
+  const scale = targetH / img.height;
+  const targetW = img.width * scale;
+  ctx.drawImage(img, CARD_W * 0.12, 0, targetW, targetH);
+}
+
+// ===== 批量生成 =====
+let generatedCanvases = [];
+let currentBatchName = '全部94张';
+
+// 按类型筛选
+function getCardsByBatch(batchName) {
+  if (batchName === '分裂') {
+    return CARDS.filter(c => c.kind === '分裂');
+  }
+  // 精确匹配类型，不包含分裂牌
+  return CARDS.filter(c => c.type === batchName && c.kind !== '分裂');
+}
+
+async function generateBatch(batchName) {
+  const cards = getCardsByBatch(batchName);
+  currentBatchName = batchName;
+  await doGenerate(cards);
+}
+
+async function generateAll() {
+  currentBatchName = '全部94张';
+  await doGenerate(CARDS);
+}
+
+async function doGenerate(cards) {
+  const grid = document.getElementById('cardGrid');
+  const status = document.getElementById('status');
+  grid.innerHTML = '';
+  generatedCanvases = [];
+
+  status.textContent = `正在生成 ${currentBatchName}（共${cards.length}张）...`;
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    try {
+      const canvas = await renderCard(card);
+      generatedCanvases.push({ card, canvas });
+
+      const item = document.createElement('div');
+      item.className = 'card-item';
+      item.appendChild(canvas);
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = `#${card.id} ${card.type} ${card.kind} T:${card.threat} $:${card.treasure}`;
+      item.appendChild(label);
+      grid.appendChild(item);
+
+      status.textContent = `已生成 ${i + 1} / ${cards.length} 张（${currentBatchName}）`;
+    } catch (e) {
+      console.error(`Card #${card.id} failed:`, e);
+      status.textContent = `卡牌 #${card.id} 生成失败: ${e.message}`;
+    }
+    if (i % 10 === 0) await new Promise(r => setTimeout(r, 10));
+  }
+
+  status.textContent = `${currentBatchName} ${cards.length}张生成完成！可点击"批量下载"保存。`;
+}
+
+// ===== 批量下载 ZIP =====
+async function downloadAll() {
+  if (generatedCanvases.length === 0) {
+    alert('请先生成卡牌！');
+    return;
+  }
+  const status = document.getElementById('status');
+  status.textContent = '正在打包 ZIP...';
+
+  const zip = new JSZip();
+  const folder = zip.folder('威胁牌');
+
+  for (const { card, canvas } of generatedCanvases) {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const fileName = `${String(card.id).padStart(2,'0')}_${card.type}_${card.kind}_T${card.threat}_V${card.treasure}.png`;
+    folder.file(fileName, blob);
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(content);
+  a.download = `Riskit_${currentBatchName}.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  status.textContent = '下载完成！';
+}
+</script>
+</body>
+</html>

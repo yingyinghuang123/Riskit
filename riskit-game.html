@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RISKiT - 丛林探险</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jungle: { 950: '#050F0D', 900: '#0A1F1C', 800: '#11332D', 700: '#1A4D44' },
+            treasure: { 400: '#FBBF24', 500: '#F59E0B' },
+            danger: { 500: '#EF4444', 600: '#DC2626' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050F0D;
+      background-image: radial-gradient(circle at 50% 0%, rgba(17, 51, 45, 0.4) 0%, transparent 70%), radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.03) 0%, transparent 50%);
+      color: #E2E8F0;
+      overscroll-behavior-y: none;
+    }
+    .card-stack-item { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card-stack-item:hover { transform: translateY(-16px) rotate(0deg) !important; z-index: 50; }
+    .gem-glow { text-shadow: 0 0 20px rgba(251, 191, 36, 0.5); font-variant-numeric: tabular-nums; }
+    .glass-panel { background: rgba(10, 31, 28, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); }
+    .tactile-btn { border-radius: 12px; background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.1)); border: 1px solid rgba(251,191,36,0.3); color: #FBBF24; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .tactile-btn:hover { background: linear-gradient(135deg, rgba(251,191,36,0.25), rgba(245,158,11,0.2)); border-color: rgba(251,191,36,0.5); box-shadow: 0 4px 20px rgba(251,191,36,0.2); }
+    .tactile-btn:active { transform: translateY(1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .card-reveal-overlay { position: fixed; inset: 0; background: rgba(5, 15, 13, 0.92); backdrop-filter: blur(12px); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(5, 15, 13, 0.92); backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10, 31, 28, 0.95); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .card-reveal-card { animation: cardPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes cardPop { 0% { transform: scale(0.4) rotateY(90deg) translateY(100px); opacity: 0; } 100% { transform: scale(1) rotateY(0deg) translateY(0); opacity: 1; } }
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .btn-disabled { opacity: 0.3; pointer-events: none; filter: grayscale(0.8); }
+  </style>
+</head>
+<body class="h-[100dvh] flex flex-col font-sans overflow-hidden selection:bg-treasure-500 selection:text-jungle-950">
+
+  <!-- Header -->
+  <header class="glass-panel sticky top-0 z-50 px-3 md:px-6 py-2 md:py-3 flex justify-between items-center border-b border-white/5">
+    <div class="flex items-center gap-2 md:gap-3">
+      <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+        <i data-lucide="tent" class="text-jungle-950 w-5 h-5 md:w-6 md:h-6"></i>
+      </div>
+      <div>
+        <h1 class="font-display font-black text-lg md:text-xl tracking-wider text-white leading-tight">RISKiT</h1>
+        <div class="text-[10px] md:text-xs text-emerald-400 font-medium flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="round-text">准备开始...</span>
+        </div>
+      </div>
+    </div>
+    <button onclick="location.reload()" class="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+      <i data-lucide="rotate-ccw" class="w-4 h-4 md:w-5 md:h-5 text-gray-300"></i>
+    </button>
+  </header>
+
+  <!-- Main Layout: Responsive vertical stack -->
+  <main class="flex-1 flex flex-col min-h-0 overflow-hidden max-w-[900px] w-full mx-auto">
+    <!-- Top: AI Players -->
+    <div id="ai-player-areas" class="flex items-stretch gap-2 md:gap-3 px-2 md:px-4 pt-2 md:pt-3 shrink-0"></div>
+
+    <!-- Middle: Danger Zone (scrollable if needed) -->
+    <section class="glass-panel mx-2 md:mx-4 my-1.5 md:my-2 p-2.5 md:p-4 relative z-20 flex-1 min-h-0 overflow-y-auto hide-scrollbar">
+      <div class="flex justify-between items-center mb-2 md:mb-3 border-b border-white/5 pb-1.5 md:pb-2">
+        <h2 class="text-xs md:text-sm font-display font-black text-treasure-400 flex items-center gap-1.5">
+          <div class="p-1 md:p-1.5 rounded-md bg-danger-500/10">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 md:w-4 md:h-4 text-danger-500"></i>
+          </div>
+          危险区
+        </h2>
+        <div class="flex items-center gap-1.5 bg-danger-500/10 px-2 py-0.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-danger-500 animate-pulse"></span>
+          <span class="text-[9px] md:text-[11px] font-bold text-danger-500">超过12即爆牌</span>
+        </div>
+      </div>
+      <div id="danger-summary" class="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3"></div>
+      <div id="danger-tracker" class="flex gap-2 md:gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x"></div>
+      <div id="bust-display" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none flex flex-col items-center gap-2 transition-all duration-500 opacity-0 scale-90"></div>
+    </section>
+
+    <!-- Bottom: My Player Area + Action Buttons -->
+    <div class="shrink-0 px-2 md:px-4 pb-2 md:pb-3 flex items-stretch gap-2 md:gap-3">
+      <div id="player-areas" class="flex-1 min-w-0"></div>
+      <div class="flex flex-col gap-1.5 md:gap-2 shrink-0 justify-center">
+        <button id="btn-exit" onclick="doExit()" class="tactile-btn flex items-center justify-center gap-1.5 px-3 md:px-5 py-2.5 md:py-3">
+          <i data-lucide="tent" class="w-4 h-4 md:w-5 md:h-5"></i>
+          <span class="font-display font-bold text-xs md:text-sm">扎营</span>
+        </button>
+        <button id="btn-draw" onclick="doDraw()" class="tactile-btn flex items-center justify-center gap-1.5 px-3 md:px-5 py-2.5 md:py-3">
+          <i data-lucide="compass" class="w-4 h-4 md:w-5 md:h-5"></i>
+          <span class="font-display font-bold text-xs md:text-sm">翻牌</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden elements to keep JS happy -->
+    <div id="opponents-bar" class="hidden"></div>
+    <div id="my-dz" class="hidden"></div>
+    <div id="player-status" class="hidden"></div>
+    <span id="player-score" class="hidden">0</span>
+    <span id="current-gems" class="hidden">0</span>
+    <div id="card-stack" class="hidden"></div>
+  </main>
+
+  <!-- Modals -->
+  <div id="card-modal" class="modal-overlay" onclick="dismissCard()">
+    <div class="modal-content flex flex-col items-center gap-4 md:gap-5 p-5 md:p-7 mx-4 max-w-sm md:max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="w-48 h-72 md:w-64 md:h-96 rounded-xl border border-white/10 overflow-hidden relative shadow-2xl">
+        <div class="absolute inset-0 bg-gradient-to-t from-jungle-950/90 to-transparent z-10"></div>
+        <img id="modal-card-img" src="" class="w-full h-full object-cover relative z-0">
+      </div>
+      <div class="text-center w-full">
+        <div id="modal-card-name" class="font-display font-bold text-lg md:text-xl text-treasure-400"></div>
+        <div id="modal-card-desc" class="text-sm text-gray-300 mt-1.5"></div>
+      </div>
+      <button onclick="dismissCard()" class="tactile-btn px-6 py-2.5 w-full text-sm">继续</button>
+    </div>
+  </div>
+
+  <div id="collection-modal" class="modal-overlay">
+    <div class="modal-content p-5 md:p-7 max-w-sm md:max-w-md w-full mx-4">
+      <div class="text-center mb-4 border-b border-white/10 pb-3">
+        <h2 class="font-display font-bold text-xl text-treasure-400">选择收集目标</h2>
+        <p class="text-xs text-gray-400 mt-1">选择一名玩家，拿走其危险区的所有卡牌</p>
+      </div>
+      <div id="collection-targets" class="space-y-2 max-h-[50vh] overflow-y-auto hide-scrollbar"></div>
+      <button id="btn-skip-collect" onclick="skipCollection()" class="tactile-btn w-full mt-4 py-2.5 text-sm">跳过收集</button>
+    </div>
+  </div>
+
+  <div id="gameover-modal" class="modal-overlay">
+    <div class="modal-content p-5 md:p-7 max-w-sm md:max-w-md w-full mx-4">
+      <div class="text-center mb-4 border-b border-white/10 pb-3">
+        <h2 class="font-display font-bold text-2xl text-treasure-400">游戏结束</h2>
+      </div>
+      <div id="gameover-results" class="space-y-2 mb-6"></div>
+      <button onclick="location.reload()" class="tactile-btn w-full py-3 text-sm">再来一局</button>
+    </div>
+  </div>
+
+  <div id="tutorial-modal" class="modal-overlay">
+    <div class="modal-content p-5 md:p-7 max-w-sm md:max-w-md w-full mx-4 max-h-[85dvh] overflow-y-auto hide-scrollbar">
+      <div class="text-center mb-4 border-b border-white/10 pb-3">
+        <div class="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center mb-3 shadow-lg">
+          <i data-lucide="book-open" class="text-jungle-950 w-6 h-6"></i>
+        </div>
+        <h2 class="font-display font-bold text-xl text-treasure-400">游戏规则</h2>
+        <p class="text-xs text-gray-400 mt-1">RISKiT 丛林探险</p>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+          <div class="flex items-center gap-2 mb-1.5"><i data-lucide="target" class="w-3.5 h-3.5 text-treasure-400"></i><span class="font-bold text-treasure-400 text-xs">游戏目标</span></div>
+          <p class="text-gray-300 text-xs leading-relaxed">5 回合内收集尽可能多的宝石（宝藏值），总分最高者获胜。</p>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+          <div class="flex items-center gap-2 mb-2"><i data-lucide="hand" class="w-3.5 h-3.5 text-treasure-400"></i><span class="font-bold text-treasure-400 text-xs">每轮操作</span></div>
+          <div class="space-y-2 text-xs text-gray-300">
+            <div class="flex items-start gap-2"><i data-lucide="compass" class="w-3.5 h-3.5 text-treasure-400 shrink-0 mt-0.5"></i><span><b class="text-treasure-400">翻牌</b> — 当前玩家翻开一张牌，所有探索中的玩家共享效果，获得宝石但累积危险</span></div>
+            <div class="flex items-start gap-2"><i data-lucide="tent" class="w-3.5 h-3.5 text-treasure-400 shrink-0 mt-0.5"></i><span><b class="text-treasure-400">扎营</b> — 安全退出，带走本轮累积的所有宝石</span></div>
+          </div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+          <div class="flex items-center gap-2 mb-2"><i data-lucide="layers" class="w-3.5 h-3.5 text-treasure-400"></i><span class="font-bold text-treasure-400 text-xs">危险区与扎营</span></div>
+          <div class="space-y-1.5 text-xs text-gray-300">
+            <p>每位玩家有自己的危险区，放置威胁值最高的那类威胁牌</p>
+            <p>扎营退出的玩家获得退出令牌（序号从大到小）</p>
+            <p>最后一人自动获得 #1 令牌（黑豹令牌）</p>
+          </div>
+        </div>
+        <div class="bg-danger-500/5 rounded-xl p-3 border border-danger-500/20">
+          <div class="flex items-center gap-2 mb-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-danger-500"></i><span class="font-bold text-danger-500 text-xs">爆牌规则</span></div>
+          <div class="space-y-1.5 text-xs text-gray-300">
+            <p>共有 5 种威胁：鳄鱼、蜘蛛、蝎子、食人鱼、毒蛇</p>
+            <p class="text-danger-500 font-medium bg-danger-500/10 p-1.5 rounded">全场同类威胁总值 &gt; 12 → 所有探索中的玩家爆牌！</p>
+            <p>爆牌后本轮宝石全部归零</p>
+          </div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+          <div class="flex items-center gap-2 mb-2"><i data-lucide="package" class="w-3.5 h-3.5 text-treasure-400"></i><span class="font-bold text-treasure-400 text-xs">收集阶段</span></div>
+          <div class="space-y-1.5 text-xs text-gray-300">
+            <p>所有玩家退出后进入收集阶段</p>
+            <p>按令牌序号从大到小依次选择收集目标</p>
+            <p>可拿走某位玩家危险区的所有卡牌（获得其宝藏值）</p>
+          </div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+          <div class="flex items-center gap-2 mb-2"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-treasure-400"></i><span class="font-bold text-treasure-400 text-xs">特殊卡牌</span></div>
+          <div class="space-y-1.5 text-xs text-gray-300">
+            <p><b class="text-blue-300">鸡毛牌</b> — 扎营时从危险区移除丢弃</p>
+            <p><b class="text-red-300">死亡愿望</b> — 爆牌时可将危险区卡牌收入得分堆</p>
+            <p><b class="text-purple-300">分裂牌</b> — 翻到时选择归属哪种威胁类型</p>
+          </div>
+        </div>
+      </div>
+      <button onclick="closeTutorial()" class="tactile-btn w-full mt-4 py-3 text-sm">明白了，开始探险！</button>
+    </div>
+  </div>
+
+  <script>
+  'use strict';
+  const params=new URLSearchParams(location.search);
+  const ONLINE_MODE=params.get('mode')==='online';
+  const ROOM_ID=params.get('roomId');
+  const MY_ID=ONLINE_MODE?params.get('playerId'):'player_1';
+  const AI_IDS=ONLINE_MODE?[]:['ai_xiaoming','ai_xiaohong'];
+  const ALL_PLAYER_IDS=ONLINE_MODE?[]:[MY_ID,...AI_IDS];
+  const NAMES=ONLINE_MODE?{}:{player_1:'你',ai_xiaoming:'AI 小明',ai_xiaohong:'AI 小红'};
+  const AVATARS={player_1:'images/avatar_marcus.png',ai_xiaoming:'images/avatar_elena.png',ai_xiaohong:'images/avatar_elena.png'};
+  const THREAT_TYPES=['crocodile','spider','scorpion','piranha','snake'];
+  const THREAT_NAMES={crocodile:'鳄鱼',spider:'蜘蛛',scorpion:'蝎子',piranha:'食人鱼',snake:'毒蛇'};
+  const THREAT_ICONS={crocodile:'skull',spider:'bug',scorpion:'bug-off',piranha:'fish',snake:'worm'};
+  let gameState=null,cardModalResolve=null,isProcessing=false,ws=null;
+
+  function genCards(){const c=[];const data=[{t:'snake',th:3,tv:1,n:3},{t:'snake',th:3,tv:2,n:4},{t:'snake',th:3,tv:3,n:5},{t:'snake',th:3,tv:5,n:3},{t:'snake',th:3,tv:7,n:1},{t:'snake',th:5,tv:0,n:2,sp:'chicken_feather'},{t:'piranha',th:3,tv:1,n:3},{t:'piranha',th:3,tv:2,n:4},{t:'piranha',th:3,tv:3,n:5},{t:'piranha',th:3,tv:5,n:3},{t:'piranha',th:3,tv:7,n:1},{t:'piranha',th:5,tv:0,n:2,sp:'chicken_feather'},{t:'crocodile',th:4,tv:1,n:4},{t:'crocodile',th:4,tv:2,n:2},{t:'crocodile',th:4,tv:3,n:4},{t:'crocodile',th:4,tv:5,n:5},{t:'crocodile',th:4,tv:7,n:1},{t:'crocodile',th:0,tv:0,n:2,sp:'deathwish'},{t:'spider',th:2,tv:1,n:3},{t:'spider',th:2,tv:2,n:5},{t:'spider',th:2,tv:3,n:3},{t:'spider',th:5,tv:3,n:3},{t:'spider',th:5,tv:5,n:2},{t:'spider',th:6,tv:7,n:1},{t:'spider',th:5,tv:0,n:1,sp:'chicken_feather'},{t:'scorpion',th:2,tv:1,n:3},{t:'scorpion',th:2,tv:2,n:5},{t:'scorpion',th:2,tv:3,n:3},{t:'scorpion',th:5,tv:3,n:3},{t:'scorpion',th:5,tv:5,n:2},{t:'scorpion',th:6,tv:7,n:1},{t:'scorpion',th:5,tv:0,n:1,sp:'chicken_feather'}];let id=0;data.forEach(d=>{for(let i=0;i<d.n;i++){c.push({id:`${d.t}_${id++}`,type:'threat',threatType:d.t,threatValue:d.th,treasureValue:d.tv,special:d.sp||null})}});const splits=[{types:['snake','spider']},{types:['snake','scorpion']},{types:['piranha','spider']},{types:['piranha','scorpion']}];splits.forEach((s,i)=>{c.push({id:`split_${i}`,type:'split',splitTypes:s.types,threatType:'none',threatValue:3,treasureValue:2})});return c}
+  const BASE_CARDS=genCards();
+  function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+  function createGame(ids){const ps=ids.map(id=>({id,name:NAMES[id]||id,outsideCards:[],dangerZoneCards:[],scorePile:[],collectedBackpacks:[],collectedMachetes:[],exitToken:null,isPantherJuiced:false,isActive:false,hasBusted:false}));return{gameId:Math.random().toString(36).slice(2),players:ps,currentRound:null,roundNumber:0,phase:'waiting',includeOptionalCards:false}}
+  function startRound(st){const rn=st.roundNumber+1;if(rn>5)return{...st,phase:'game_over'};const deck=shuffle(BASE_CARDS);const ps=st.players.map(p=>({...p,outsideCards:[],dangerZoneCards:[],exitToken:null,isPantherJuiced:false,isActive:true,hasBusted:false}));const et=[];for(let i=ps.length;i>=2;i--)et.push({number:i,isCoffin:false,isPanther:false});return{...st,currentRound:{roundNumber:rn,deck,discardPile:[],centerCards:[],players:ps,exitTokens:et,currentPlayerIndex:0,phase:'draw',lastDrawnCard:null,collectingPlayerIndex:0,consecutiveCollections:0,inputRequest:null,drawnCardsThisRound:[]},roundNumber:rn,phase:'playing'}}
+
+  function getPlayerThreats(p){const m=new Map();[...p.outsideCards,...p.dangerZoneCards].forEach(c=>{const t=c.assignedType||c.def.threatType;if(t==='none')return;m.set(t,(m.get(t)||0)+c.def.threatValue)});return m}
+  function updateDZ(p){const t=getPlayerThreats(p);let mx=-1,mt=null;t.forEach((v,k)=>{if(v>=mx){mx=v;mt=k}});const all=[...p.outsideCards,...p.dangerZoneCards];if(mt){p.dangerZoneCards=all.filter(c=>{const ct=c.assignedType||c.def.threatType;return ct===mt});p.outsideCards=all.filter(c=>{const ct=c.assignedType||c.def.threatType;return ct!==mt})}else{p.dangerZoneCards=[];p.outsideCards=all}}
+  function getDZStacks(rd){const m=new Map();rd.players.forEach(p=>p.dangerZoneCards.forEach(c=>{const t=c.assignedType||c.def.threatType;if(t==='none')return;if(!m.has(t))m.set(t,[]);m.get(t).push(c)}));return Array.from(m.entries()).map(([t,cs])=>({threatType:t,cards:cs,totalValue:cs.reduce((s,c)=>s+c.def.threatValue,0)}))}
+  function checkBusts(rd){return getDZStacks(rd).filter(s=>s.totalValue>12).map(s=>s.threatType)}
+  function handleBust(rd,p){p.isActive=false;p.hasBusted=true;const tk=rd.exitTokens.shift();if(tk)p.exitToken={...tk,isCoffin:true};if(p.dangerZoneCards.some(c=>c.def.special==='deathwish')){p.scorePile.push(...p.dangerZoneCards);p.dangerZoneCards=[]}}
+  function nextP(rd){const s=rd.currentPlayerIndex;do{rd.currentPlayerIndex=(rd.currentPlayerIndex+1)%rd.players.length}while(!rd.players[rd.currentPlayerIndex].isActive&&rd.currentPlayerIndex!==s)}
+
+  function resolveCard(st,card){const rd=st.currentRound,p=rd.players.find(x=>x.id===card.ownerId);if(card.def.type==='threat'){p.outsideCards.push(card);updateDZ(p);return bustCont(st,card)}if(card.def.type==='split'){rd.phase='resolve';rd.inputRequest={playerId:p.id,type:'choose_split_type',options:card.def.splitTypes,cardId:card.id};return{state:st,drawnCard:card,needsInput:rd.inputRequest}}return finTurn(st,card)}
+  function bustCont(st,card){const rd=st.currentRound,bt=checkBusts(rd);if(bt.length>0){const bustedPlayers=rd.players.filter(p=>p.isActive&&p.dangerZoneCards.some(c=>bt.includes(c.assignedType||c.def.threatType)));bustedPlayers.forEach(p=>handleBust(rd,p));showBustDisplay(bt,bustedPlayers);}return finTurn(st,card)}
+  function showBustDisplay(threatTypes, players) {
+    const el = document.getElementById('bust-display');
+    if (!el) return;
+    const t = threatTypes[0];
+    const names = players.map(p => p.name || p.id).join(', ');
+    el.innerHTML = `
+      <div class="bg-red-600 text-white px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.6)] border-2 border-red-400 flex flex-col items-center gap-1">
+        <div class="flex items-center gap-2">
+          <i data-lucide="${THREAT_ICONS[t]||'skull'}" class="w-8 h-8 animate-bounce"></i>
+          <span class="font-display font-black text-2xl tracking-wider">爆牌！</span>
+        </div>
+        <div class="text-sm font-bold text-red-100">${THREAT_NAMES[t]} 威胁爆发</div>
+        <div class="text-xs text-red-200 mt-1">${names} 失去本轮收益</div>
+      </div>
+    `;
+    el.classList.remove('opacity-0', 'scale-90');
+    el.classList.add('opacity-100', 'scale-100');
+    lucide.createIcons();
+    setTimeout(() => {
+      el.classList.remove('opacity-100', 'scale-100');
+      el.classList.add('opacity-0', 'scale-90');
+    }, 3000);
+  }
+  function finTurn(st,card){const rd=st.currentRound;if(rd.players.every(p=>!p.isActive))return startColl(st,card);nextP(rd);rd.phase='exit_window';return{state:st,drawnCard:card}}
+  function startColl(st,card){const rd=st.currentRound;if(rd.players.every(p=>p.hasBusted)){rd.phase='round_end'}else{rd.players.forEach(p=>{p.outsideCards=[];p.dangerZoneCards=p.dangerZoneCards.filter(c=>c.def.treasureValue>0)});rd.phase='collecting';rd.collectingPlayerIndex=0}return{state:st,drawnCard:card}}
+
+  function playerExit(st,pid){const rd=st.currentRound;if(!rd||(rd.phase!=='exit_window'&&rd.phase!=='draw'))return st;const p=rd.players.find(x=>x.id===pid);if(!p||!p.isActive||p.isPantherJuiced)return st;p.isActive=false;const fe=p.dangerZoneCards.filter(c=>c.def.special==='chicken_feather');if(fe.length>0){p.dangerZoneCards=p.dangerZoneCards.filter(c=>c.def.special!=='chicken_feather');fe.forEach(f=>rd.discardPile.push(f.def))}const tk=rd.exitTokens.shift();if(tk)p.exitToken=tk;if(rd.exitTokens.length===0){const lp=rd.players.find(x=>x.isActive);if(lp){lp.isActive=false;lp.exitToken={number:1,isCoffin:lp.hasBusted,isPanther:true}}}if(rd.players.every(x=>!x.isActive)){startColl(st,rd.lastDrawnCard);return st}if(!rd.players[rd.currentPlayerIndex].isActive){nextP(rd)}rd.phase='exit_window';return st}
+
+  function drawCard(st){const rd=st.currentRound;if(!rd||rd.phase!=='draw')return{state:st};const cd=rd.deck.shift();if(!cd)return{state:st};const p=rd.players[rd.currentPlayerIndex];const ci={id:`${cd.id}_${Date.now()}`,def:cd,ownerId:p.id};rd.lastDrawnCard=ci;rd.drawnCardsThisRound.push(ci);return resolveCard(st,ci)}
+
+  function collectTreasure(st,pid,target){const rd=st.currentRound;if(!rd||rd.phase!=='collecting')return st;const sp=rd.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);const cp=sp[rd.collectingPlayerIndex];if(!cp||cp.id!==pid)return st;if(target==='center'){const c=rd.centerCards.shift();if(c)cp.scorePile.push(c)}else{const tp=rd.players.find(p=>p.id===target);if(tp){cp.scorePile.push(...tp.dangerZoneCards);tp.dangerZoneCards=[]}}moveNext(rd);return st}
+  function moveNext(rd){const sp=rd.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);if(sp.length===0){rd.phase='round_end';return}rd.collectingPlayerIndex=(rd.collectingPlayerIndex+1)%sp.length;if(!rd.players.some(p=>p.dangerZoneCards.length>0)&&rd.centerCards.length===0)rd.phase='round_end'}
+
+  function resolveInput(st,inp){const rd=st.currentRound;if(!rd)return st;rd.inputRequest=null;const p=rd.players.find(x=>x.id===inp.playerId);if(inp.type==='choose_split_type'&&rd.lastDrawnCard){rd.lastDrawnCard.assignedType=inp.value;p.outsideCards.push(rd.lastDrawnCard);updateDZ(p);bustCont(st,rd.lastDrawnCard)}return st}
+  function getScores(st){return st.players.map(p=>({playerId:p.id,name:p.name,score:p.scorePile.reduce((s,c)=>s+c.def.treasureValue,0),cardCount:p.scorePile.length}))}
+  function getCurTreasure(rd){if(!rd)return 0;return rd.drawnCardsThisRound.reduce((s,c)=>s+c.def.treasureValue,0)}
+  function getScore(st,pid){const p=st.players.find(x=>x.id===pid);return p?p.scorePile.reduce((s,c)=>s+c.def.treasureValue,0):0}
+
+  const CARD_FILES=['01_蛇_普通_T3_V1.png','02_蛇_普通_T3_V1.png','03_蛇_普通_T3_V1.png','04_蛇_普通_T3_V2.png','05_蛇_普通_T3_V2.png','06_蛇_普通_T3_V2.png','07_蛇_普通_T3_V2.png','08_蛇_普通_T3_V3.png','09_蛇_普通_T3_V3.png','10_蛇_普通_T3_V3.png','11_蛇_普通_T3_V3.png','12_蛇_普通_T3_V3.png','13_蛇_普通_T3_V5.png','14_蛇_普通_T3_V5.png','15_蛇_普通_T3_V5.png','16_蛇_普通_T3_V7.png','17_蛇_鸡毛_T5_V0.png','18_蛇_鸡毛_T5_V0.png','19_食人鱼_普通_T3_V1.png','20_食人鱼_普通_T3_V1.png','21_食人鱼_普通_T3_V1.png','22_食人鱼_普通_T3_V2.png','23_食人鱼_普通_T3_V2.png','24_食人鱼_普通_T3_V2.png','25_食人鱼_普通_T3_V2.png','26_食人鱼_普通_T3_V3.png','27_食人鱼_普通_T3_V3.png','28_食人鱼_普通_T3_V3.png','29_食人鱼_普通_T3_V3.png','30_食人鱼_普通_T3_V3.png','31_食人鱼_普通_T3_V5.png','32_食人鱼_普通_T3_V5.png','33_食人鱼_普通_T3_V5.png','34_食人鱼_普通_T3_V7.png','35_食人鱼_鸡毛_T5_V0.png','36_食人鱼_鸡毛_T5_V0.png','37_鳄鱼_普通_T4_V1.png','38_鳄鱼_普通_T4_V1.png','39_鳄鱼_普通_T4_V1.png','40_鳄鱼_普通_T4_V1.png','41_鳄鱼_普通_T4_V2.png','42_鳄鱼_普通_T4_V2.png','43_鳄鱼_普通_T4_V3.png','44_鳄鱼_普通_T4_V3.png','45_鳄鱼_普通_T4_V3.png','46_鳄鱼_普通_T4_V3.png','47_鳄鱼_普通_T4_V5.png','48_鳄鱼_普通_T4_V5.png','49_鳄鱼_普通_T4_V5.png','50_鳄鱼_普通_T4_V5.png','51_鳄鱼_普通_T4_V5.png','52_鳄鱼_普通_T4_V7.png','53_鳄鱼_死亡愿望_T0_V0.png','54_鳄鱼_死亡愿望_T0_V0.png','55_蜘蛛_普通_T2_V1.png','56_蜘蛛_普通_T2_V1.png','57_蜘蛛_普通_T2_V1.png','58_蜘蛛_普通_T2_V2.png','59_蜘蛛_普通_T2_V2.png','60_蜘蛛_普通_T2_V2.png','61_蜘蛛_普通_T2_V2.png','62_蜘蛛_普通_T2_V2.png','63_蜘蛛_普通_T2_V3.png','64_蜘蛛_普通_T2_V3.png','65_蜘蛛_普通_T2_V3.png','66_蜘蛛_普通_T5_V3.png','67_蜘蛛_普通_T5_V3.png','68_蜘蛛_普通_T5_V3.png','69_蜘蛛_普通_T5_V5.png','70_蜘蛛_普通_T5_V5.png','71_蜘蛛_普通_T6_V7.png','72_蜘蛛_鸡毛_T5_V0.png','73_蝎子_普通_T2_V1.png','74_蝎子_普通_T2_V1.png','75_蝎子_普通_T2_V1.png','76_蝎子_普通_T2_V2.png','77_蝎子_普通_T2_V2.png','78_蝎子_普通_T2_V2.png','79_蝎子_普通_T2_V2.png','80_蝎子_普通_T2_V2.png','81_蝎子_普通_T2_V3.png','82_蝎子_普通_T2_V3.png','83_蝎子_普通_T2_V3.png','84_蝎子_普通_T5_V3.png','85_蝎子_普通_T5_V3.png','86_蝎子_普通_T5_V3.png','87_蝎子_普通_T5_V5.png','88_蝎子_普通_T5_V5.png','89_蝎子_普通_T6_V7.png','90_蝎子_鸡毛_T5_V0.png'];
+  const SPLIT_FILES=['91_蛇+蜘蛛_分裂_T3_V2.png','92_蛇+蝎子_分裂_T3_V2.png','93_蜘蛛+食人鱼_分裂_T3_V2.png','94_蝎子+食人鱼_分裂_T3_V2.png'];
+  function cardImg(card){if(!card)return'assets/cards/card_back.png';const d=card.def;if(d.type==='split'){const idx=parseInt(d.id.split('_')[1]);return'images/cards/'+SPLIT_FILES[idx]}const num=parseInt(d.id.split('_')[1]);if(num>=0&&num<CARD_FILES.length)return'images/cards/'+CARD_FILES[num];return'assets/cards/card_back.png'}function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=((h<<5)-h)+s.charCodeAt(i)|0;return h}
+  function cardDesc(card){if(!card)return'';if(card.def.type==='threat'){const sp=card.def.special==='chicken_feather'?' [鸡毛]':(card.def.special==='deathwish'?' [死亡愿望]':'');return`${THREAT_NAMES[card.def.threatType]}${sp} (威胁值:${card.def.threatValue} 宝藏值:${card.def.treasureValue})`}if(card.def.type==='split'){const names=card.def.splitTypes.map(t=>THREAT_NAMES[t]).join('/');return`分裂卡 ${names} - 选择一种威胁 (威胁值:3 宝藏值:${card.def.treasureValue})`}return''}
+
+  function getOpponentIds(){if(ONLINE_MODE&&gameState&&gameState.currentRound)return gameState.currentRound.players.filter(p=>p.id!==MY_ID).map(p=>p.id);return AI_IDS}
+
+  function renderAll(){if(!gameState||!gameState.currentRound)return;rRound();rDanger();rStack();rTreasure();rPlayer();rBtns();rPlayerAreas();lucide.createIcons()}
+  function rPlayerAreas() {
+    const rd=gameState.currentRound;if(!rd)return;
+    const me=rd.players.find(p=>p.id===MY_ID);
+    const others=rd.players.filter(p=>p.id!==MY_ID);
+    // Render AI players at top
+    const aiEl=document.getElementById('ai-player-areas');
+    aiEl.innerHTML=others.map(p=>{
+      const name=p.name||p.id;
+      const outCards=p.outsideCards;
+      const sc=getScore(gameState,p.id);
+      const avatar=AVATARS[p.id]||'images/avatar_elena.png';
+      let bdr='border-white/10';let bg='bg-jungle-900/40';let op='';
+      if(p.hasBusted){bdr='border-red-500/30';bg='bg-red-950/40';op='opacity-60'}else if(!p.isActive&&p.exitToken){bdr='border-emerald-500/30';bg='bg-emerald-950/30';op='opacity-70'}
+      const statusBadge=p.hasBusted?'<span class="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded font-bold border border-red-500/20">已爆牌</span>':(!p.isActive&&p.exitToken?`<span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold border border-emerald-500/20">已扎营 #${p.exitToken.number}</span>`:(rd.players[rd.currentPlayerIndex]?.id===p.id?'<span class="text-[9px] bg-treasure-400/20 text-treasure-400 px-1.5 py-0.5 rounded font-bold animate-pulse border border-treasure-400/20">思考中</span>':'<span class="text-[9px] bg-white/5 text-gray-400 px-1.5 py-0.5 rounded border border-white/10">探索中</span>'));
+      let outHtml='';
+      if(outCards.length>0){outHtml=`<div class="flex flex-wrap gap-1.5 mt-2">`;outCards.forEach(c=>{const img=cardImg(c);const sp=c.def.special==='chicken_feather'?'※':'';outHtml+=`<div class="w-10 h-14 rounded-md border border-white/20 overflow-hidden relative shadow-md"><img src="${img}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div><div class="absolute bottom-0 left-0 right-0 p-1 flex justify-between items-end"><span class="text-[8px] font-display font-black text-gray-300">${c.def.threatValue}</span><span class="text-[8px] font-display font-black text-treasure-400">💎${c.def.treasureValue}</span></div></div>`});outHtml+='</div>'}
+      return`<div class="flex-1 ${bg} ${op} rounded-2xl p-3 border ${bdr} flex flex-col shadow-inner backdrop-blur-sm"><div class="flex items-center gap-2.5 mb-1"><div class="w-8 h-8 rounded-full bg-jungle-800 border ${bdr} overflow-hidden shrink-0 shadow-md"><img src="${avatar}" class="w-full h-full object-cover"></div><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="text-xs font-bold text-white truncate">${name}</span>${statusBadge}</div><div class="flex items-center gap-1 text-[10px] text-treasure-400 font-bold mt-0.5"><i data-lucide="gem" class="w-3 h-3"></i><span class="font-display">${sc}</span></div></div></div>${outHtml}${outCards.length===0?'<div class="flex gap-1.5 mt-2"><div class="w-8 h-12 rounded border border-dashed border-white/10 bg-white/[0.02]"></div><div class="w-8 h-12 rounded border border-dashed border-white/10 bg-white/[0.02]"></div><div class="w-8 h-12 rounded border border-dashed border-white/10 bg-white/[0.02]"></div></div>':''}</div>`
+    }).join('');
+    // Render my area at bottom
+    const myEl=document.getElementById('player-areas');
+    if(!me)return;
+    const sc=getScore(gameState,MY_ID);
+    const avatar=AVATARS[MY_ID]||'images/avatar_marcus.png';
+    let bdr='border-treasure-400/30';let bg='bg-treasure-400/5';let op='';
+    if(me.hasBusted){bdr='border-red-500/40';bg='bg-red-950/30';op='opacity-60'}else if(!me.isActive&&me.exitToken){bdr='border-emerald-500/30';bg='bg-emerald-950/20';op='opacity-70'}
+    const statusBadge=me.hasBusted?'<span class="text-[8px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded font-bold">已爆牌</span>':(!me.isActive&&me.exitToken?`<span class="text-[8px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold">已扎营 #${me.exitToken.number}</span>`:(rd.players[rd.currentPlayerIndex]?.id===MY_ID?'<span class="text-[8px] bg-treasure-400/20 text-treasure-400 px-1.5 py-0.5 rounded font-bold animate-pulse">思考中</span>':'<span class="text-[8px] bg-white/5 text-gray-400 px-1.5 py-0.5 rounded">探索中</span>'));
+    let outHtml='';
+    const outCards=me.outsideCards;
+    if(outCards.length>0){outHtml=`<div class="flex flex-wrap gap-2 mt-2">`;outCards.forEach(c=>{const img=cardImg(c);const sp=c.def.special==='chicken_feather'?'※':'';outHtml+=`<div class="w-12 h-16 sm:w-14 sm:h-20 rounded-lg border border-white/20 overflow-hidden relative shadow-lg"><img src="${img}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div><div class="absolute bottom-0 left-0 right-0 p-1.5 flex justify-between items-end"><span class="text-[10px] font-display font-black text-gray-300">${c.def.threatValue}</span><span class="text-[10px] font-display font-black text-treasure-400">💎${c.def.treasureValue}</span></div>${sp?`<div class="absolute top-1 right-1 text-[8px] text-blue-300 font-bold bg-black/50 px-1 rounded">${sp}</div>`:''}</div>`});outHtml+='</div>'}
+    myEl.innerHTML=`<div class="${bg} ${op} rounded-2xl p-3 md:p-4 border ${bdr} flex flex-col md:flex-row md:items-center gap-4 shadow-inner backdrop-blur-md w-full"><div class="flex items-center gap-3 shrink-0"><div class="w-12 h-12 rounded-full bg-jungle-800 border-2 ${bdr} overflow-hidden shadow-lg"><img src="${avatar}" class="w-full h-full object-cover"></div><div><div class="flex items-center gap-2"><span class="text-sm font-black text-treasure-400 tracking-wide">你</span>${statusBadge}</div><div class="flex items-center gap-1 text-xs text-treasure-400 font-bold mt-1"><i data-lucide="gem" class="w-3.5 h-3.5"></i><span class="font-display text-base">${sc}</span></div></div></div><div class="w-full md:w-px h-px md:h-12 bg-white/10 shrink-0"></div><div class="flex-1 flex flex-col justify-center min-w-0"><div class="text-[10px] text-treasure-400/60 font-bold tracking-widest uppercase mb-1">你的探险区</div><div class="flex-1 overflow-x-auto hide-scrollbar pb-1">${outCards.length>0?outHtml:'<div class="flex gap-2"><div class="w-12 h-16 rounded-lg border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="compass" class="w-5 h-5 text-gray-700"></i></div><div class="w-12 h-16 rounded-lg border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="compass" class="w-5 h-5 text-gray-700"></i></div><div class="w-12 h-16 rounded-lg border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="compass" class="w-5 h-5 text-gray-700"></i></div><div class="w-12 h-16 rounded-lg border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="compass" class="w-5 h-5 text-gray-700"></i></div><span class="text-[10px] text-gray-600 self-center ml-2">翻牌后卡牌出现在这里</span></div>'}</div></div></div>`
+  }
+  function rRound(){document.getElementById('round-text').textContent=`第 ${gameState.roundNumber} 回合 / 共 5 回合`}
+  function rDanger(){const el=document.getElementById('danger-tracker'),rd=gameState.currentRound;if(!rd)return;
+    // Render threat summary bar
+    const sumEl=document.getElementById('danger-summary');const stacks=getDZStacks(rd);const sm={};stacks.forEach(s=>{sm[s.threatType]=s});
+    sumEl.innerHTML=THREAT_TYPES.map(t=>{const tot=sm[t]?sm[t].totalValue:0;const danger=tot>12;const warn=tot>8;const bg=danger?'bg-red-500/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.3)]':(warn?'bg-red-950/60 border-red-500/30':(tot>0?'bg-jungle-900/60 border-white/10':'bg-jungle-900/30 border-white/5'));const tc=danger?'text-red-300 font-black':(warn?'text-red-300 font-bold':(tot>0?'text-treasure-400 font-bold':'text-gray-500 font-medium'));return`<div class="flex items-center gap-2 px-3 py-1.5 rounded-xl border ${bg}"><i data-lucide="${THREAT_ICONS[t]}" class="w-4 h-4 ${danger?'text-red-400':(tot>0?'text-treasure-400':'text-gray-600')}"></i><span class="text-xs ${tc} tracking-wider">${THREAT_NAMES[t]}</span><span class="text-sm font-display ${tc}">${tot}<span class="text-[10px] opacity-60">/12</span></span>${danger?'<span class="text-[10px] text-red-400 animate-pulse font-black ml-1">BUST!</span>':''}</div>`}).join('');
+    // Render Danger Zone Cards per player (Horizontal layout)
+    el.innerHTML=rd.players.map(p=>{
+      const isMe=p.id===MY_ID;const name=isMe?'你':(p.name||p.id);
+      const dzCards=p.dangerZoneCards;
+      const t=dzCards.length>0?(dzCards[0].assignedType||dzCards[0].def.threatType):null;
+      const dzTot=dzCards.reduce((s,c)=>s+c.def.threatValue,0);
+      let bdr=isMe?'border-treasure-400/30':'border-white/10';
+      let bg='bg-jungle-900/40';let op='';
+      if(p.hasBusted){bdr='border-red-500/40';bg='bg-red-950/30';op='opacity-60'}else if(!p.isActive&&p.exitToken){bdr='border-emerald-500/30';bg='bg-emerald-950/20';op='opacity-70'}
+      let dzHtml='';
+      if(dzCards.length>0){dzHtml=`<div class="text-[10px] text-red-300 font-bold mb-2 flex items-center gap-1.5 bg-red-500/10 w-fit px-2 py-0.5 rounded-md border border-red-500/20"><i data-lucide="${THREAT_ICONS[t]}" class="w-3.5 h-3.5"></i>${THREAT_NAMES[t]} <span class="font-display ml-1">${dzTot}</span></div><div class="flex gap-1.5">`;dzCards.forEach(c=>{const img=cardImg(c);const sp=c.def.special==='chicken_feather'?'※':'';dzHtml+=`<div class="w-11 h-16 shrink-0 rounded-md border border-red-500/40 overflow-hidden relative shadow-md"><img src="${img}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div><div class="absolute bottom-0 left-0 right-0 p-1 flex justify-between items-end"><span class="text-[9px] font-display font-black text-red-300">${c.def.threatValue}</span><span class="text-[9px] font-display font-black text-treasure-400">💎${c.def.treasureValue}</span></div>${sp?`<div class="absolute top-0.5 right-0.5 text-[7px] text-blue-300 font-bold bg-black/50 px-1 rounded">${sp}</div>`:''}</div>`});dzHtml+='</div>'}
+      const nameColor=isMe?'text-treasure-400':'text-white';
+      return`<div class="${bg} ${op} rounded-2xl p-3 border ${bdr} flex flex-col min-w-[160px] snap-start shadow-inner"><div class="text-xs font-bold ${nameColor} mb-2 flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full ${isMe?'bg-treasure-400':'bg-gray-400'}"></div>${name}</div>${dzHtml}${dzCards.length===0?'<div class="flex items-center justify-center gap-3 py-3"><div class="w-10 h-14 rounded-md border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-600/50"></i></div><div class="w-10 h-14 rounded-md border border-dashed border-white/10 bg-white/[0.02] flex items-center justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-600/50"></i></div><span class="text-[10px] text-emerald-600/60 font-bold">安全</span></div>':''}</div>`
+    }).join('')}
+
+
+  function rStack(){const el=document.getElementById('card-stack'),rd=gameState.currentRound;const isPC=window.innerWidth>=640;const cw=isPC?'w-28':'w-16';const ch=isPC?'h-40':'h-24';if(!rd||rd.drawnCardsThisRound.length===0){el.innerHTML=`<div class="${cw} ${ch} rounded-xl shadow-2xl border border-white/10 opacity-50"><img src="assets/cards/card_back.png" class="w-full h-full object-cover rounded-xl"></div>`;return}const cards=rd.drawnCardsThisRound.slice(-6),n=cards.length,sp=isPC?Math.min(n*45,200):Math.min(n*28,120);el.innerHTML=cards.map((c,i)=>{const off=(i-(n-1)/2)*(sp/n),rot=(i-(n-1)/2)*4,lat=i===n-1,thr=c.def.type==='threat'||c.def.type==='split';const bdr=lat?(thr?'border-2 border-red-500/50':'border-2 border-treasure-400/30'):`border ${thr?'border-red-500/30':'border-white/10'}`;const y=lat?(isPC?-10:-6):0;const tag=lat?`<div class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-lg animate-bounce">新</div>`:'';const ov=thr?'<div class="absolute inset-0 bg-red-500/10 rounded-xl pointer-events-none"></div>':'';const tsz=isPC?'text-[11px]':'text-[8px]';const tv=c.def.treasureValue;const thv=c.def.threatValue;let valHtml='';if(c.def.type==='threat'){valHtml=`<div class="absolute bottom-1 left-0 right-0 flex justify-between px-1.5 pointer-events-none"><span class="${tsz} font-bold text-yellow-300 bg-black/60 px-1 rounded">💎${tv}</span><span class="${tsz} font-bold text-red-300 bg-black/60 px-1 rounded">⚠${thv}</span></div>`}else if(c.def.type==='split'){valHtml=`<div class="absolute bottom-1 left-0 right-0 flex justify-between px-1.5 pointer-events-none"><span class="${tsz} font-bold text-yellow-300 bg-black/60 px-1 rounded">💎${tv}</span><span class="${tsz} font-bold text-red-300 bg-black/60 px-1 rounded">⚠${thv}+${thv}</span></div>`}return`<div class="card-stack-item absolute ${cw} ${ch} rounded-xl shadow-2xl ${bdr}" style="transform:translateX(${off}px) rotate(${rot}deg) translateY(${y}px);z-index:${(i+1)*10}"><img src="${cardImg(c)}" class="w-full h-full object-cover rounded-xl">${ov}${valHtml}${tag}</div>`}).join('')}
+
+  function rTreasure(){document.getElementById('current-gems').textContent=getCurTreasure(gameState.currentRound)}
+  function rPlayer(){
+    const rd=gameState.currentRound;
+    if(!rd)return;
+    const sc=getScore(gameState,MY_ID);
+    document.getElementById('player-score').textContent=sc;
+  }
+
+  function rBtns(){const rd=gameState.currentRound;if(!rd)return;const me=rd.players.find(p=>p.id===MY_ID);if(!me)return;const be=document.getElementById('btn-exit'),bd=document.getElementById('btn-draw'),my=rd.players[rd.currentPlayerIndex]?.id===MY_ID;if(gameState.phase==='game_over'||rd.phase==='round_end'||!me.isActive||isProcessing){be.classList.add('btn-disabled');bd.classList.add('btn-disabled');return}if(rd.phase==='exit_window'){be.classList.remove('btn-disabled');if(my){bd.classList.remove('btn-disabled')}else{bd.classList.add('btn-disabled')}}else if(rd.phase==='draw'&&my){be.classList.remove('btn-disabled');bd.classList.remove('btn-disabled')}else{be.classList.add('btn-disabled');bd.classList.add('btn-disabled')}}
+
+  function showModal(card){return new Promise(res=>{cardModalResolve=res;document.getElementById('modal-card-img').src=cardImg(card);const name=card.def.type==='threat'?THREAT_NAMES[card.def.threatType]:(card.def.type==='split'?'分裂卡 ('+card.def.splitTypes.map(t=>THREAT_NAMES[t]).join('+')+')':'');document.getElementById('modal-card-name').textContent=name;document.getElementById('modal-card-desc').textContent=cardDesc(card);document.getElementById('card-modal').classList.add('active')})}
+  function dismissCard(){document.getElementById('card-modal').classList.remove('active');if(cardModalResolve){cardModalResolve();cardModalResolve=null}}
+  function showGameOver(scores){const sc=scores||getScores(gameState).sort((a,b)=>b.score-a.score||(a.cardCount-b.cardCount));document.getElementById('gameover-results').innerHTML=sc.map((s,i)=>{const me=s.playerId===MY_ID,md=i===0?'🏆':(i===1?'🥈':'🥉'),bg=me?'bg-treasure-400/10 border-treasure-400/30':'bg-white/5 border-white/10';return`<div class="flex items-center justify-between p-3 rounded-xl border ${bg}"><div class="flex items-center gap-3"><span class="text-xl">${md}</span><div><div class="font-bold text-sm ${me?'text-treasure-400':'text-white'}">${s.name}</div><div class="text-[10px] text-gray-400">${s.cardCount} 张卡牌</div></div></div><div class="font-display font-black text-xl ${me?'text-treasure-400':'text-white'}">${s.score}</div></div>`}).join('');document.getElementById('gameover-modal').classList.add('active')}
+
+  function aiDecide(rd,aid){const p=rd.players.find(x=>x.id===aid);if(!p)return null;if(rd.phase==='collecting'){const sp=rd.players.filter(x=>x.exitToken&&!x.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);if(sp[rd.collectingPlayerIndex]?.id===aid){const targets=rd.players.filter(x=>x.dangerZoneCards.length>0);const bestTarget=targets.sort((a,b)=>b.dangerZoneCards.reduce((s,c)=>s+c.def.treasureValue,0)-a.dangerZoneCards.reduce((s,c)=>s+c.def.treasureValue,0))[0];return{type:'collect_treasure',playerId:aid,data:bestTarget?bestTarget.id:'center'}}return null}if(!p.isActive)return null;if(rd.inputRequest&&rd.inputRequest.playerId===aid){return{type:'choose_split',playerId:aid,data:rd.inputRequest.options[Math.floor(Math.random()*rd.inputRequest.options.length)]}}if(rd.phase==='exit_window'){const th=getPlayerThreats(p);let mx=0;th.forEach(v=>{if(v>mx)mx=v});const r=Math.random();let ex=false;if(mx>=10)ex=r<0.8;else if(mx>=8)ex=r<0.4;else if(mx>=6)ex=r<0.15;if(ex)return{type:'exit',playerId:aid};if(rd.players[rd.currentPlayerIndex]?.id===aid)return{type:'draw',playerId:aid};return null}if(rd.players[rd.currentPlayerIndex]?.id!==aid)return null;if(rd.phase==='draw')return{type:'draw',playerId:aid};return null}
+
+  let inAiLoop=false;
+  async function processAction(act){if(!gameState||!gameState.currentRound)return;const rd=gameState.currentRound;let ch=false;switch(act.type){case'draw':if((rd.phase==='draw'||rd.phase==='exit_window')&&rd.players[rd.currentPlayerIndex].id===act.playerId){if(rd.phase==='exit_window')rd.phase='draw';const r=drawCard(gameState);gameState=r.state;if(r.drawnCard&&act.playerId===MY_ID){renderAll();await showModal(r.drawnCard)}ch=true}break;case'exit':if(rd.phase==='exit_window'||rd.phase==='draw'){gameState=playerExit(gameState,act.playerId);ch=true}break;case'collect_treasure':if(rd.phase==='collecting'){gameState=collectTreasure(gameState,act.playerId,act.data);ch=true}break;case'choose_split':gameState=resolveInput(gameState,{playerId:act.playerId,type:'choose_split_type',value:act.data});ch=true;break}if(ch&&!inAiLoop){await advance();renderAll()}}
+
+  async function advance(){const rd=gameState.currentRound;if(!rd)return;if(rd.phase==='round_end'){renderAll();await dly(1500);if(gameState.roundNumber>=5){gameState.phase='game_over';renderAll();showGameOver();return}gameState=startRound(gameState);renderAll();await dly(500);await aiLoop();return}if(rd.phase==='resolve'&&rd.inputRequest){if(rd.inputRequest.playerId===MY_ID){if(rd.inputRequest.type==='choose_split_type'){showSplitChoiceLocal(rd.inputRequest);return}}}if(rd.phase==='collecting'){const sp=rd.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);const cp=sp[rd.collectingPlayerIndex];if(cp&&cp.id===MY_ID){showCollectionModal();return;}}await aiLoop()}
+  function showCollectionModal() {
+    const rd = gameState.currentRound;
+    const targets = rd.players.filter(p => p.dangerZoneCards.length > 0);
+    const el = document.getElementById('collection-targets');
+    if (targets.length === 0) {
+      skipCollection();
+      return;
+    }
+    el.innerHTML = targets.map(p => {
+      const t = p.dangerZoneCards[0] ? (p.dangerZoneCards[0].assignedType || p.dangerZoneCards[0].def.threatType) : '';
+      const tot = p.dangerZoneCards.reduce((s, c) => s + c.def.treasureValue, 0);
+      return `<button onclick="chooseCollectionTarget('${p.id}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 active:scale-95 transition-all text-left">
+        <div>
+          <div class="font-bold text-white text-sm">${p.name || p.id}</div>
+          <div class="text-[10px] text-gray-400">${p.dangerZoneCards.length} 张卡牌</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="${THREAT_ICONS[t]||'alert-triangle'}" class="w-4 h-4 text-treasure-400"></i>
+          <span class="font-bold text-treasure-400 text-lg">${tot}</span>
+        </div>
+      </button>`;
+    }).join('');
+    document.getElementById('collection-modal').classList.add('active');
+    lucide.createIcons();
+  }
+  function showSplitChoiceLocal(req) {
+    const names = {crocodile:'🐊 鳄鱼',spider:'🕷 蜘蛛',scorpion:'🦂 蝎子',piranha:'🐟 食人鱼',snake:'🐍 毒蛇'};
+    document.getElementById('modal-card-img').src = 'images/cards/card_0_17.jpeg';
+    document.getElementById('modal-card-name').textContent = '分裂卡 - 选择威胁类型';
+    document.getElementById('modal-card-desc').innerHTML = req.options.map(t =>
+      `<button onclick="chooseSplitLocal('${t}')" class="inline-block m-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-sm hover:bg-white/20 transition-colors">${names[t]}</button>`
+    ).join('');
+    document.getElementById('card-modal').classList.add('active');
+    lucide.createIcons();
+  }
+  function chooseSplitLocal(type) {
+    document.getElementById('card-modal').classList.remove('active');
+    processAction({ type: 'choose_split', playerId: MY_ID, data: type });
+  }
+  function skipCollection() {
+    document.getElementById('collection-modal').classList.remove('active');
+    if (ONLINE_MODE) {
+      wsSend({ type: 'action', action: { type: 'collect_treasure', data: 'center' } });
+    } else {
+      processAction({ type: 'collect_treasure', playerId: MY_ID, data: 'center' });
+    }
+  }
+  function chooseCollectionTarget(targetId) {
+    document.getElementById('collection-modal').classList.remove('active');
+    if (ONLINE_MODE) {
+      wsSend({ type: 'action', action: { type: 'collect_treasure', data: targetId } });
+    } else {
+      processAction({ type: 'collect_treasure', playerId: MY_ID, data: targetId });
+    }
+  }
+
+  async function aiLoop(){if(ONLINE_MODE)return;inAiLoop=true;const rd=gameState.currentRound;if(!rd||gameState.phase==='game_over'){inAiLoop=false;return}let lc=0;while(lc<100){lc++;const crd=gameState.currentRound;if(!crd||gameState.phase==='game_over')break;if(crd.phase==='round_end')break;if(crd.phase==='collecting'){const sp=crd.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);const cp=sp[crd.collectingPlayerIndex];if(cp&&cp.id===MY_ID){inAiLoop=false;renderAll();showCollectionModal();return}}if(crd.phase==='resolve'&&crd.inputRequest&&crd.inputRequest.playerId===MY_ID){inAiLoop=false;renderAll();showSplitChoiceLocal(crd.inputRequest);return}let acted=false;for(const aid of AI_IDS){const a=aiDecide(crd,aid);if(a){isProcessing=true;renderAll();await dly(1200+Math.random()*800);await processAction(a);isProcessing=false;acted=true;break}}if(!acted)break}inAiLoop=false;const frd=gameState.currentRound;if(frd&&frd.phase==='round_end'){renderAll();await dly(1500);if(gameState.roundNumber>=5){gameState.phase='game_over';renderAll();showGameOver();return}gameState=startRound(gameState);renderAll();await dly(500);await aiLoop();return}renderAll()}
+
+  function dly(ms){return new Promise(r=>setTimeout(r,ms))}
+
+  async function doDraw(){if(ONLINE_MODE){wsSend({type:'action',action:{type:'draw'}});return}if(isProcessing)return;const rd=gameState?.currentRound;if(!rd)return;const me=rd.players.find(p=>p.id===MY_ID);if(!me||!me.isActive)return;if(rd.players[rd.currentPlayerIndex]?.id!==MY_ID)return;if(rd.phase!=='draw'&&rd.phase!=='exit_window')return;isProcessing=true;renderAll();await processAction({type:'draw',playerId:MY_ID});isProcessing=false;renderAll()}
+
+  async function doExit(){if(ONLINE_MODE){wsSend({type:'action',action:{type:'exit'}});return}if(isProcessing)return;const rd=gameState?.currentRound;if(!rd)return;const me=rd.players.find(p=>p.id===MY_ID);if(!me||!me.isActive)return;if(rd.phase!=='exit_window'&&rd.phase!=='draw')return;isProcessing=true;gameState=playerExit(gameState,MY_ID);renderAll();await dly(300);const rd2=gameState.currentRound;if(rd2&&rd2.phase==='collecting'){const sp=rd2.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);const cp=sp[rd2.collectingPlayerIndex];if(cp&&cp.id===MY_ID){isProcessing=false;renderAll();showCollectionModal();return}}if(rd2&&rd2.phase==='round_end'){renderAll();await dly(1500);if(gameState.roundNumber>=5){gameState.phase='game_over';renderAll();showGameOver();isProcessing=false;return}gameState=startRound(gameState);renderAll();await dly(500)}isProcessing=false;renderAll();await aiLoop()}
+
+  function wsSend(msg){if(ws&&ws.readyState===1)ws.send(JSON.stringify(msg))}
+
+  function connectOnline(){const wsUrl=(location.protocol==='https:'?'wss://':'ws://')+location.host;ws=new WebSocket(wsUrl);ws.onopen=()=>{ws.send(JSON.stringify({type:'reconnect',roomId:ROOM_ID,playerId:MY_ID}))};ws.onmessage=(e)=>{const msg=JSON.parse(e.data);handleOnlineMsg(msg)};ws.onclose=()=>{document.getElementById('round-text').textContent='连接断开，尝试重连...';setTimeout(connectOnline,2000)};ws.onerror=()=>{}}
+
+  function handleOnlineMsg(msg){switch(msg.type){case'reconnected':if(msg.state){gameState=msg.state;renderAll()}break;case'state_update':gameState=msg.state;renderAll();if(gameState.currentRound&&gameState.currentRound.phase==='collecting'){const sp=gameState.currentRound.players.filter(p=>p.exitToken&&!p.exitToken.isCoffin).sort((a,b)=>a.exitToken.number-b.exitToken.number);const cp=sp[gameState.currentRound.collectingPlayerIndex];if(cp&&cp.id===MY_ID){showCollectionModal();}}break;case'game_started':gameState=msg.state;renderAll();break;case'card_drawn':if(gameState&&gameState.currentRound){gameState.currentRound.drawnCardsThisRound.push(msg.card);gameState.currentRound.lastDrawnCard=msg.card;if(msg.playerId===MY_ID)showModal(msg.card);renderAll()}break;case'player_exited':renderAll();break;case'input_required':if(msg.request.playerId===MY_ID){showSplitChoice(msg.request)}break;case'game_over':gameState.phase='game_over';showGameOver(msg.scores.sort((a,b)=>b.score-a.score||(a.cardCount-b.cardCount)));break;case'error':alert(msg.message);break}}
+
+  function showSplitChoice(req){const names={crocodile:'🐊 鳄鱼',spider:'🕷 蜘蛛',scorpion:'🦂 蝎子',piranha:'🐟 食人鱼',snake:'🐍 毒蛇'};const el=document.getElementById('modal-card-desc');document.getElementById('modal-card-img').src='images/cards/card_0_17.jpeg';document.getElementById('modal-card-name').textContent='分裂卡 - 选择威胁类型';el.innerHTML=(req.options||THREAT_TYPES).map(t=>`<button onclick="chooseSplit('${t}')" class="inline-block m-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-sm hover:bg-white/20 transition-colors">${names[t]}</button>`).join('');document.getElementById('card-modal').classList.add('active')}
+  function chooseSplit(type){document.getElementById('card-modal').classList.remove('active');wsSend({type:'action',action:{type:'choose_split',data:type}})}
+
+  async function init(){const shown=localStorage.getItem('riskit_tutorial_shown');if(!shown){document.getElementById('tutorial-modal').classList.add('active');lucide.createIcons()}else{startGame()}}
+  function closeTutorial(){document.getElementById('tutorial-modal').classList.remove('active');localStorage.setItem('riskit_tutorial_shown','1');startGame()}
+  async function startGame(){if(ONLINE_MODE){connectOnline();return}gameState=createGame(ALL_PLAYER_IDS);gameState=startRound(gameState);renderAll();await dly(800);await aiLoop()}
+  lucide.createIcons();
+  init();
+  </script>
+</body>
+</html>

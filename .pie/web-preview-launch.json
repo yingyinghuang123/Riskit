@@ -1,0 +1,5 @@
+{
+  "framework": "vite",
+  "command": "node node_modules/vite/bin/vite.js",
+  "savedAt": "2026-04-30T21:16:51.942Z"
+}

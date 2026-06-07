@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RISKiT - 丛林探险 (PC端)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jungle: { 950: '#050F0D', 900: '#0A1F1C', 800: '#11332D', 700: '#1A4D44' },
+            treasure: { 400: '#FBBF24', 500: '#F59E0B' },
+            danger: { 500: '#EF4444', 600: '#DC2626' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050F0D;
+      background-image: radial-gradient(circle at 50% 0%, rgba(17, 51, 45, 0.4) 0%, transparent 70%), radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.03) 0%, transparent 50%);
+      color: #E2E8F0;
+    }
+    .card-stack-item { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card-stack-item:hover { transform: translateY(-16px) rotate(0deg) !important; z-index: 50; }
+    .hazard-warning { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 10px rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.6); }
+    .gem-glow { text-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+    .glass-panel { background: rgba(10, 31, 28, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-[100dvh] flex flex-col font-sans overflow-x-hidden selection:bg-treasure-500 selection:text-jungle-950">
+  <header class="glass-panel sticky top-0 z-50 px-8 py-4 flex justify-between items-center border-b border-white/5">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+        <i data-lucide="tent" class="text-jungle-950 w-7 h-7"></i>
+      </div>
+      <div>
+        <h1 class="font-display font-black text-2xl tracking-wider text-white leading-tight">RISKiT</h1>
+        <div class="text-sm text-emerald-400 font-medium flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          第 3 回合 / 共 5 回合
+        </div>
+      </div>
+    </div>
+    <button class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+      <i data-lucide="menu" class="w-6 h-6 text-gray-300"></i>
+    </button>
+  </header>
+
+  <main class="flex-1 w-full max-w-[1440px] mx-auto p-8 grid grid-cols-12 gap-8">
+    <!-- 左侧：对手状态 -->
+    <aside class="col-span-3 flex flex-col gap-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-sm font-bold text-gray-400 tracking-widest uppercase">对手状态</h2>
+        <span class="text-xs bg-white/10 px-3 py-1 rounded-full text-gray-300">3 人局</span>
+      </div>
+      
+      <div class="flex flex-col gap-4">
+        <div class="glass-panel rounded-xl p-4 flex items-center gap-4 opacity-70 border-emerald-500/30">
+          <div class="relative">
+            <div class="w-14 h-14 rounded-full bg-jungle-800 border-2 border-emerald-500 overflow-hidden">
+              <img src="images/avatar_elena.png" alt="Elena" class="w-full h-full object-cover">
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-jungle-950">
+              <i data-lucide="check" class="w-3.5 h-3.5 text-jungle-950"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-start">
+              <span class="font-bold text-gray-200 text-lg">Elena</span>
+              <span class="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">已扎营</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-1">
+              <i data-lucide="gem" class="w-4 h-4 text-treasure-400"></i>
+              <span class="text-base font-bold text-white">32</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4 flex items-center gap-4 opacity-50 border-red-500/30">
+          <div class="relative">
+            <div class="w-14 h-14 rounded-full bg-jungle-800 border-2 border-red-500 overflow-hidden grayscale">
+              <div class="w-full h-full bg-jungle-700 flex items-center justify-center">
+                <i data-lucide="user" class="w-7 h-7 text-gray-400"></i>
+              </div>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-jungle-950">
+              <i data-lucide="skull" class="w-3.5 h-3.5 text-white"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-start">
+              <span class="font-bold text-gray-400 text-lg">David</span>
+              <span class="text-xs font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">已爆牌</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-1">
+              <i data-lucide="gem" class="w-4 h-4 text-gray-500"></i>
+              <span class="text-base font-bold text-gray-500">15</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 中间：核心探索区 -->
+    <section class="col-span-6 flex flex-col items-center relative">
+      <div class="glass-panel rounded-2xl p-5 mb-6 w-full max-w-xl relative z-20">
+        <div class="flex justify-between items-center mb-4 px-2">
+          <h2 class="text-sm font-bold text-gray-300 tracking-widest flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-treasure-400"></i>
+            危险追踪器
+          </h2>
+          <span class="text-xs text-gray-500">集齐两张相同即爆牌</span>
+        </div>
+        
+        <div class="grid grid-cols-4 gap-3">
+          <div class="hazard-warning bg-red-950/50 rounded-xl p-3 flex flex-col items-center justify-center border relative overflow-hidden group">
+            <div class="absolute inset-0 bg-red-500/10 animate-pulse-slow"></div>
+            <i data-lucide="bug" class="w-6 h-6 text-red-400 mb-2 relative z-10"></i>
+            <span class="text-xs text-red-300 font-medium relative z-10">蜘蛛</span>
+            <div class="flex gap-1.5 mt-2 relative z-10">
+              <div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+            </div>
+          </div>
+          
+          <div class="hazard-warning bg-red-950/50 rounded-xl p-3 flex flex-col items-center justify-center border relative overflow-hidden">
+            <div class="absolute inset-0 bg-red-500/10 animate-pulse-slow"></div>
+            <i data-lucide="worm" class="w-6 h-6 text-red-400 mb-2 relative z-10"></i>
+            <span class="text-xs text-red-300 font-medium relative z-10">毒蛇</span>
+            <div class="flex gap-1.5 mt-2 relative z-10">
+              <div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+            </div>
+          </div>
+
+          <div class="bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center border border-white/10 opacity-50">
+            <i data-lucide="bug-off" class="w-6 h-6 text-gray-400 mb-2"></i>
+            <span class="text-xs text-gray-400 font-medium">蝎子</span>
+            <div class="flex gap-1.5 mt-2">
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+            </div>
+          </div>
+
+          <div class="bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center border border-white/10 opacity-50">
+            <i data-lucide="fish" class="w-6 h-6 text-gray-400 mb-2"></i>
+            <span class="text-xs text-gray-400 font-medium">食人鱼</span>
+            <div class="flex gap-1.5 mt-2">
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-700"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative w-full flex-1 flex items-center justify-center perspective-1000 min-h-[350px] my-6">
+        <div class="absolute left-0 top-1/2 -translate-y-1/2">
+          <div class="relative w-28 h-40 rounded-xl shadow-2xl border border-white/10 transform -rotate-6 transition-transform hover:-translate-y-2 cursor-pointer">
+            <img src="images/cards/card_0_0.png" alt="Card Back" class="w-full h-full object-cover rounded-xl">
+            <div class="absolute -bottom-3 -right-3 bg-jungle-800 text-white text-sm font-bold px-3 py-1.5 rounded-lg border border-white/20 shadow-lg">
+              余 24
+            </div>
+          </div>
+        </div>
+
+        <div class="relative flex justify-center items-center w-full h-full">
+          <div class="card-stack-item absolute w-44 h-64 rounded-xl shadow-2xl border border-white/10" style="transform: translateX(-100px) rotate(-8deg); z-index: 10;">
+            <img src="images/cards/card_0_15.jpeg" alt="Treasure" class="w-full h-full object-cover rounded-xl">
+          </div>
+          <div class="card-stack-item absolute w-44 h-64 rounded-xl shadow-2xl border border-red-500/30" style="transform: translateX(-40px) rotate(-2deg); z-index: 20;">
+            <img src="images/cards/card_0_14.jpeg" alt="Spider Hazard" class="w-full h-full object-cover rounded-xl">
+            <div class="absolute inset-0 bg-red-500/10 rounded-xl pointer-events-none"></div>
+          </div>
+          <div class="card-stack-item absolute w-44 h-64 rounded-xl shadow-2xl border border-white/10" style="transform: translateX(20px) rotate(4deg); z-index: 30;">
+            <img src="images/cards/card_0_3.jpeg" alt="Treasure" class="w-full h-full object-cover rounded-xl">
+          </div>
+          <div class="card-stack-item absolute w-44 h-64 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-red-500/50" style="transform: translateX(80px) rotate(10deg) translateY(-10px); z-index: 40;">
+            <img src="images/cards/card_0_16.jpeg" alt="Snake Hazard" class="w-full h-full object-cover rounded-xl">
+            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent rounded-xl pointer-events-none"></div>
+            <div class="absolute -top-4 -right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
+              最新
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center relative z-20 glass-panel px-10 py-4 rounded-full border-treasure-400/20">
+        <p class="text-sm text-gray-400 mb-1">当前探险累计收益</p>
+        <div class="flex items-center justify-center gap-3">
+          <i data-lucide="gem" class="w-8 h-8 text-treasure-400"></i>
+          <span class="font-display font-black text-5xl text-white gem-glow">14</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧：玩家操作区 -->
+    <aside class="col-span-3 flex flex-col gap-6">
+      <div class="glass-panel rounded-2xl p-6 border-treasure-400/20 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-treasure-400/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+        <h2 class="text-sm font-bold text-gray-400 tracking-widest uppercase mb-6">你的状态</h2>
+        
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-16 h-16 rounded-full bg-jungle-800 border-2 border-treasure-400 overflow-hidden shadow-[0_0_20px_rgba(251,191,36,0.2)]">
+            <img src="images/avatar_marcus.png" alt="Player" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="font-bold text-white text-xl">Marcus (你)</div>
+            <div class="text-xs text-gray-400 flex items-center gap-1.5 mt-1">
+              <i data-lucide="tent" class="w-3.5 h-3.5"></i> 帐篷内安全资产
+            </div>
+            <div class="font-bold text-treasure-400 flex items-center gap-1.5 mt-1.5">
+              <i data-lucide="gem" class="w-5 h-5"></i>
+              <span class="text-2xl">28</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <button class="group relative flex flex-col items-center justify-center p-5 rounded-xl bg-gradient-to-b from-emerald-600 to-emerald-800 border border-emerald-400/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all active:scale-95 overflow-hidden w-full">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50"></div>
+            <div class="flex items-center gap-2.5 mb-1.5 relative z-10">
+              <i data-lucide="tent" class="w-6 h-6 text-emerald-100 group-hover:scale-110 transition-transform"></i>
+              <span class="font-bold text-xl text-white tracking-wide">扎营结算</span>
+            </div>
+            <span class="text-xs text-emerald-200 text-center opacity-90 relative z-10">安全带走 14 颗宝石并退出</span>
+          </button>
+
+          <button class="group relative flex flex-col items-center justify-center p-5 rounded-xl bg-gradient-to-b from-jungle-800 to-jungle-950 border border-white/10 hover:border-treasure-400/50 hover:bg-jungle-800 transition-all active:scale-95 overflow-hidden w-full">
+            <div class="flex items-center gap-2.5 mb-1.5">
+              <i data-lucide="compass" class="w-6 h-6 text-treasure-400 group-hover:rotate-45 transition-transform duration-500"></i>
+              <span class="font-bold text-xl text-white tracking-wide">继续探索</span>
+            </div>
+            <span class="text-xs text-gray-400 text-center group-hover:text-gray-300">翻开下一张牌，<span class="text-red-400">抽到蜘蛛/蛇即爆牌</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-xl p-4 flex items-center justify-between">
+        <span class="text-sm font-bold text-gray-400">可用道具</span>
+        <div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-600 cursor-not-allowed">
+          <i data-lucide="backpack" class="w-5 h-5"></i>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

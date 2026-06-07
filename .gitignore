@@ -1,0 +1,7 @@
+node_modules/
+dist/
+game.js
+.pieconfig/
+preview-qr.png
+*.log
+.DS_Store

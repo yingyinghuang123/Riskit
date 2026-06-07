@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RISKiT - 首页</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jungle: { 950: '#050F0D', 900: '#0A1F1C', 800: '#11332D', 700: '#1A4D44' },
+            treasure: { 400: '#FBBF24', 500: '#F59E0B' },
+            danger: { 500: '#EF4444', 600: '#DC2626' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          animation: {
+            'float-slow': 'float 6s ease-in-out infinite',
+            'float-delayed': 'float 6s ease-in-out 3s infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0) rotate(var(--tw-rotate))' },
+              '50%': { transform: 'translateY(-20px) rotate(var(--tw-rotate))' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #050F0D;
+      background-image: 
+        radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 50% 100%, rgba(17, 51, 45, 0.6) 0%, transparent 80%);
+      color: #E2E8F0;
+      overscroll-behavior-y: none;
+    }
+    .gem-glow { text-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
+    .glass-panel { 
+      background: rgba(10, 31, 28, 0.6); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px); 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); 
+    }
+  </style>
+</head>
+<body class="min-h-[100dvh] flex flex-col font-sans overflow-x-hidden selection:bg-treasure-500 selection:text-jungle-950 relative">
+  
+
+  <div class="absolute top-20 -left-10 w-40 h-56 rounded-2xl border border-white/10 opacity-20 -rotate-12 bg-[url('images/cards/card_0_0.png')] bg-cover shadow-2xl animate-float-slow pointer-events-none"></div>
+  <div class="absolute bottom-40 -right-10 w-48 h-64 rounded-2xl border border-white/10 opacity-30 rotate-12 bg-[url('images/cards/card_0_15.jpeg')] bg-cover shadow-2xl animate-float-delayed pointer-events-none"></div>
+  
+  <main class="flex-1 flex flex-col items-center justify-center p-6 relative z-10 w-full max-w-md mx-auto">
+    
+
+    <div class="text-center mb-12 w-full">
+      <div class="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center shadow-[0_0_50px_rgba(245,158,11,0.3)] mb-6 relative">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-30 rounded-3xl"></div>
+        <i data-lucide="tent" class="text-jungle-950 w-12 h-12 relative z-10"></i>
+      </div>
+      <h1 class="font-display font-black text-7xl tracking-wider text-white mb-2 gem-glow">RISKiT</h1>
+      <p class="text-treasure-400/80 tracking-[0.3em] text-sm font-bold uppercase">丛林探险 · 步步惊心</p>
+    </div>
+
+
+    <div class="glass-panel rounded-[2rem] p-6 w-full flex flex-col gap-6 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-treasure-400/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+      
+
+      <div class="flex items-center justify-between border-b border-white/10 pb-6 relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-full bg-jungle-800 border-2 border-treasure-400 overflow-hidden shadow-[0_0_15px_rgba(251,191,36,0.2)]">
+            <img src="images/avatar_marcus.png" alt="Player" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="font-bold text-white text-lg">Marcus</div>
+            <div class="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded inline-block mt-1 border border-emerald-400/20">探险家 Lv.12</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-gray-400 mb-1">总资产</div>
+          <div class="font-bold text-treasure-400 flex items-center gap-1.5 justify-end">
+            <i data-lucide="gem" class="w-4 h-4"></i>
+            <span class="text-2xl font-display">1,250</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="flex flex-col gap-3 relative z-10">
+        <a href="rooms.html" class="group relative flex items-center justify-center p-4 rounded-2xl bg-gradient-to-b from-treasure-400 to-orange-600 border border-treasure-300/50 shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all active:scale-95 overflow-hidden">
+          <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-20"></div>
+          <span class="font-black text-xl text-jungle-950 tracking-wide relative z-10 flex items-center gap-2">
+            <i data-lucide="play" class="w-6 h-6 fill-current"></i> 开始探险
+          </span>
+        </a>
+        
+        <div class="grid grid-cols-2 gap-3 mt-1">
+          <button class="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors active:scale-95">
+            <i data-lucide="book-open" class="w-4 h-4 text-gray-400"></i>
+            <span class="text-sm font-bold text-gray-300">游戏规则</span>
+          </button>
+          <button class="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors active:scale-95">
+            <i data-lucide="trophy" class="w-4 h-4 text-treasure-400"></i>
+            <span class="text-sm font-bold text-gray-300">排行榜</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-8 text-xs text-gray-600 font-medium tracking-widest">
+      MINIENGINE V1.0.4
+    </div>
+  </main>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

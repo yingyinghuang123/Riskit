@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://storage.googleapis.com/multimodal_files/input_file_0.png",
+  "generatedAt": "2026-05-01T08:48:58.142Z",
+  "totalSize": 0,
+  "engineHints": [],
+  "files": [],
+  "html": "",
+  "errors": [
+    "playwright 执行失败: Executable not found in $PATH: \"node\""
+  ]
+}

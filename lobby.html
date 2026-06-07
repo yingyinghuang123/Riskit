@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RISKiT - 联机大厅</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jungle: { 950: '#050F0D', 900: '#0A1F1C', 800: '#11332D', 700: '#1A4D44' },
+            treasure: { 400: '#FBBF24', 500: '#F59E0B' },
+            danger: { 500: '#EF4444', 600: '#DC2626' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050F0D; background-image: radial-gradient(circle at 50% 0%, rgba(17, 51, 45, 0.4) 0%, transparent 70%); color: #E2E8F0; overscroll-behavior-y: none; }
+    .glass-panel { background: rgba(10, 31, 28, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="min-h-[100dvh] flex flex-col font-sans overflow-x-hidden selection:bg-treasure-500 selection:text-jungle-950">
+  <header class="glass-panel sticky top-0 z-50 px-4 py-3 flex justify-between items-center border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <a href="rooms.html" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+        <i data-lucide="arrow-left" class="w-5 h-5 text-gray-300"></i>
+      </a>
+      <div>
+        <h1 class="font-display font-bold text-lg tracking-wider text-white leading-tight">联机大厅</h1>
+        <p class="text-[10px] text-gray-400">与好友一起探险</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-md mx-auto p-4 flex flex-col gap-4">
+    <!-- 昵称输入 -->
+    <div class="glass-panel rounded-2xl p-5">
+      <label class="text-xs font-bold text-gray-300 tracking-widest mb-2 block">你的昵称</label>
+      <input id="nickname" type="text" maxlength="12" placeholder="输入昵称..." value="" class="w-full bg-jungle-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-treasure-400/50 transition-colors">
+    </div>
+
+    <!-- 创建/加入 选择 -->
+    <div id="view-choice" class="space-y-4 fade-in">
+      <button onclick="showCreate()" class="w-full glass-panel rounded-2xl p-5 flex items-center gap-4 hover:border-treasure-400/30 transition-all active:scale-[0.98]">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+          <i data-lucide="plus" class="w-7 h-7 text-jungle-950"></i>
+        </div>
+        <div class="text-left">
+          <h3 class="font-bold text-white text-lg">创建房间</h3>
+          <p class="text-xs text-gray-400 mt-0.5">生成房间码，邀请好友加入</p>
+        </div>
+      </button>
+      <button onclick="showJoin()" class="w-full glass-panel rounded-2xl p-5 flex items-center gap-4 hover:border-emerald-400/30 transition-all active:scale-[0.98]">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+          <i data-lucide="log-in" class="w-7 h-7 text-white"></i>
+        </div>
+        <div class="text-left">
+          <h3 class="font-bold text-white text-lg">加入房间</h3>
+          <p class="text-xs text-gray-400 mt-0.5">输入好友分享的房间码</p>
+        </div>
+      </button>
+    </div>
+
+    <!-- 加入房间视图 -->
+    <div id="view-join" class="hidden space-y-4 fade-in">
+      <div class="glass-panel rounded-2xl p-5">
+        <label class="text-xs font-bold text-gray-300 tracking-widest mb-3 block">输入房间码</label>
+        <input id="room-code-input" type="text" maxlength="6" placeholder="6位房间码" class="w-full bg-jungle-800 border border-white/10 rounded-xl px-4 py-4 text-white text-center text-2xl font-display font-bold tracking-[0.3em] uppercase placeholder-gray-500 focus:outline-none focus:border-treasure-400/50 transition-colors">
+        <button onclick="doJoin()" class="w-full mt-4 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 text-white font-bold text-sm active:scale-95 transition-transform">加入房间</button>
+        <button onclick="backToChoice()" class="w-full mt-2 py-2 text-gray-400 text-xs hover:text-white transition-colors">返回</button>
+      </div>
+    </div>
+
+    <!-- 等待大厅 -->
+    <div id="view-waiting" class="hidden space-y-4 fade-in">
+      <div class="glass-panel rounded-2xl p-5 text-center">
+        <div class="text-xs text-gray-400 mb-1">房间码</div>
+        <div id="display-room-code" class="font-display font-black text-4xl text-treasure-400 tracking-[0.2em] mb-2">------</div>
+        <p class="text-[10px] text-gray-500">分享此码给好友加入</p>
+      </div>
+      <div class="glass-panel rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-gray-300 tracking-widest">玩家列表</span>
+          <span id="player-count" class="text-[10px] text-gray-500">0/4</span>
+        </div>
+        <div id="player-list" class="space-y-2"></div>
+      </div>
+      <button id="btn-start" onclick="doStart()" class="hidden w-full py-3 rounded-xl bg-gradient-to-b from-treasure-400 to-orange-600 text-jungle-950 font-bold text-sm active:scale-95 transition-transform">开始游戏</button>
+      <div id="wait-hint" class="text-center text-xs text-gray-500 animate-pulse">等待房主开始游戏...</div>
+    </div>
+
+    <!-- 错误提示 -->
+    <div id="error-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white text-sm px-5 py-2.5 rounded-full shadow-lg z-50 fade-in"></div>
+  </main>
+
+  <script>
+  'use strict';
+  const WS_URL = (location.protocol==='https:'?'wss://':'ws://')+location.host;
+  let ws = null, myPlayerId = null, myRoomId = null, isHost = false;
+
+  function getNick() {
+    const v = document.getElementById('nickname').value.trim();
+    return v || '探险者' + Math.floor(Math.random() * 900 + 100);
+  }
+
+  function showCreate() {
+    document.getElementById('view-choice').classList.add('hidden');
+    connectAndSend({ type: 'create_room', playerName: getNick() });
+  }
+
+  function showJoin() {
+    document.getElementById('view-choice').classList.add('hidden');
+    document.getElementById('view-join').classList.remove('hidden');
+  }
+
+  function backToChoice() {
+    document.getElementById('view-join').classList.add('hidden');
+    document.getElementById('view-choice').classList.remove('hidden');
+  }
+
+  function doJoin() {
+    const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+    if (code.length !== 6) { showError('请输入6位房间码'); return; }
+    connectAndSend({ type: 'join_room', roomId: code, playerName: getNick() });
+  }
+
+  function doStart() {
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'start_game' }));
+  }
+
+  function connectAndSend(msg) {
+    if (ws && ws.readyState === 1) { ws.send(JSON.stringify(msg)); return; }
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => ws.send(JSON.stringify(msg));
+    ws.onmessage = (e) => handleMsg(JSON.parse(e.data));
+    ws.onclose = () => { showError('连接断开'); };
+    ws.onerror = () => { showError('连接失败，请确认服务器已启动'); };
+  }
+
+  function handleMsg(msg) {
+    switch (msg.type) {
+      case 'room_created':
+        myPlayerId = msg.playerId;
+        myRoomId = msg.roomId;
+        isHost = true;
+        showWaiting(msg.roomId, msg.players);
+        break;
+      case 'room_joined':
+        myPlayerId = msg.playerId;
+        myRoomId = msg.roomId;
+        isHost = false;
+        document.getElementById('view-join').classList.add('hidden');
+        showWaiting(msg.roomId, msg.players);
+        break;
+      case 'player_joined':
+      case 'player_left':
+      case 'host_changed':
+        updatePlayerList(msg.players);
+        break;
+      case 'game_started':
+        sessionStorage.setItem('riskit_online', JSON.stringify({ roomId: myRoomId, playerId: myPlayerId, wsUrl: WS_URL }));
+        location.href = `riskit-game.html?mode=online&roomId=${myRoomId}&playerId=${myPlayerId}`;
+        break;
+      case 'error':
+        showError(msg.message);
+        break;
+    }
+  }
+
+  function showWaiting(roomId, players) {
+    document.getElementById('view-choice').classList.add('hidden');
+    document.getElementById('view-join').classList.add('hidden');
+    document.getElementById('view-waiting').classList.remove('hidden');
+    document.getElementById('display-room-code').textContent = roomId;
+    updatePlayerList(players);
+  }
+
+  function updatePlayerList(players) {
+    const el = document.getElementById('player-list');
+    document.getElementById('player-count').textContent = `${players.length}/4`;
+    el.innerHTML = players.map(p => {
+      const me = p.id === myPlayerId;
+      const host = p.isHost;
+      const badges = [];
+      if (host) badges.push('<span class="text-[9px] bg-treasure-400/20 text-treasure-400 px-1.5 py-0.5 rounded font-bold">房主</span>');
+      if (me) badges.push('<span class="text-[9px] bg-emerald-400/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">你</span>');
+      return `<div class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-jungle-700 border border-white/20 flex items-center justify-center text-xs font-bold text-white">${p.name[0]}</div>
+          <span class="text-sm font-medium text-white">${p.name}</span>
+        </div>
+        <div class="flex items-center gap-1">${badges.join('')}</div>
+      </div>`;
+    }).join('');
+
+    const me2 = players.find(p => p.id === myPlayerId);
+    isHost = me2 ? me2.isHost : false;
+    if (isHost) {
+      document.getElementById('btn-start').classList.remove('hidden');
+      document.getElementById('wait-hint').classList.add('hidden');
+    } else {
+      document.getElementById('btn-start').classList.add('hidden');
+      document.getElementById('wait-hint').classList.remove('hidden');
+    }
+  }
+
+  function showError(text) {
+    const el = document.getElementById('error-toast');
+    el.textContent = text;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 3000);
+  }
+
+  lucide.createIcons();
+  const saved = localStorage.getItem('riskit_nickname');
+  if (saved) document.getElementById('nickname').value = saved;
+  document.getElementById('nickname').addEventListener('blur', function() {
+    localStorage.setItem('riskit_nickname', this.value.trim());
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RISKiT - 选择场次</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jungle: { 950: '#050F0D', 900: '#0A1F1C', 800: '#11332D', 700: '#1A4D44' },
+            treasure: { 400: '#FBBF24', 500: '#F59E0B' },
+            danger: { 500: '#EF4444', 600: '#DC2626' }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050F0D; background-image: radial-gradient(circle at 50% 0%, rgba(17, 51, 45, 0.4) 0%, transparent 70%), radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.03) 0%, transparent 50%); color: #E2E8F0; overscroll-behavior-y: none; }
+    .glass-panel { background: rgba(10, 31, 28, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); }
+    .room-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .room-card:active { transform: scale(0.97); }
+    .room-card:hover { box-shadow: 0 0 30px rgba(251, 191, 36, 0.1); }
+  </style>
+</head>
+<body class="min-h-[100dvh] flex flex-col font-sans overflow-x-hidden selection:bg-treasure-500 selection:text-jungle-950">
+  <header class="glass-panel sticky top-0 z-50 px-4 py-3 flex justify-between items-center border-b border-white/5">
+    <div class="flex items-center gap-3">
+      <a href="home.html" class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
+        <i data-lucide="arrow-left" class="w-5 h-5 text-gray-300"></i>
+      </a>
+      <div>
+        <h1 class="font-display font-bold text-lg tracking-wider text-white leading-tight">选择场次</h1>
+        <p class="text-[10px] text-gray-400">选择一个探险难度开始游戏</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 bg-treasure-400/10 px-3 py-1.5 rounded-lg border border-treasure-400/20">
+      <i data-lucide="gem" class="w-4 h-4 text-treasure-400"></i>
+      <span class="font-bold text-treasure-400 text-sm">1,250</span>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-md mx-auto p-4 flex flex-col gap-4">
+    <a href="riskit-game.html?mode=easy" class="room-card glass-panel rounded-2xl p-5 relative overflow-hidden block">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-400/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+      <div class="flex items-start justify-between relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <i data-lucide="leaf" class="w-7 h-7 text-white"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-lg">新手丛林</h3>
+            <p class="text-xs text-gray-400 mt-0.5">适合初次探险者</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-gray-500 mb-1">入场</div>
+          <div class="flex items-center gap-1 text-emerald-400 font-bold">
+            <i data-lucide="gem" class="w-3.5 h-3.5"></i>
+            <span>10</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 mt-4 pt-4 border-t border-white/5 relative z-10">
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>3 人对局</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+          <span>5 回合</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-emerald-400">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+          <span>基础卡组</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="riskit-game.html?mode=normal" class="room-card glass-panel rounded-2xl p-5 relative overflow-hidden block">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-treasure-400/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+      <div class="flex items-start justify-between relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-treasure-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+            <i data-lucide="compass" class="w-7 h-7 text-jungle-950"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-lg">经典探险</h3>
+            <p class="text-xs text-gray-400 mt-0.5">标准游戏体验</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-gray-500 mb-1">入场</div>
+          <div class="flex items-center gap-1 text-treasure-400 font-bold">
+            <i data-lucide="gem" class="w-3.5 h-3.5"></i>
+            <span>50</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 mt-4 pt-4 border-t border-white/5 relative z-10">
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>3 人对局</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+          <span>5 回合</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-treasure-400">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>基础卡组</span>
+        </div>
+      </div>
+      <div class="absolute top-3 right-3 bg-treasure-400 text-jungle-950 text-[9px] font-bold px-2 py-0.5 rounded-full">推荐</div>
+    </a>
+
+
+
+    <div class="my-2 flex items-center gap-3"><div class="flex-1 h-px bg-white/10"></div><span class="text-[10px] text-gray-500 font-bold tracking-widest">或者</span><div class="flex-1 h-px bg-white/10"></div></div>
+
+    <a href="lobby.html" class="room-card glass-panel rounded-2xl p-5 relative overflow-hidden block border-sky-400/20">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-sky-400/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+      <div class="flex items-start justify-between relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+            <i data-lucide="wifi" class="w-7 h-7 text-white"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-lg">联机对战</h3>
+            <p class="text-xs text-gray-400 mt-0.5">创建房间或加入好友的房间</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-gray-500 mb-1">模式</div>
+          <div class="flex items-center gap-1 text-sky-400 font-bold text-sm">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>2-4人</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 mt-4 pt-4 border-t border-white/5 relative z-10">
+        <div class="flex items-center gap-1.5 text-xs text-sky-400">
+          <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+          <span>实时联网</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="key" class="w-3.5 h-3.5"></i>
+          <span>房间码匹配</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>断线重连</span>
+        </div>
+      </div>
+      <div class="absolute top-3 right-3 bg-sky-400 text-jungle-950 text-[9px] font-bold px-2 py-0.5 rounded-full">NEW</div>
+    </a>
+  </main>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

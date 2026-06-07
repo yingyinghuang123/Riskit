@@ -1,0 +1,83 @@
+{
+  "appid": "",
+  "projectname": "riskit",
+  "compileType": "game",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "minified": true,
+    "newFeature": true,
+    "autoAudits": false,
+    "urlCheck": true,
+    "minifyWXML": true
+  },
+  "libVersion": "3.14.1",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "folder",
+        "value": "src"
+      },
+      {
+        "type": "file",
+        "value": "index.html"
+      },
+      {
+        "type": "folder",
+        "value": "docs"
+      },
+      {
+        "type": "folder",
+        "value": ".pieconfig"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.json"
+      },
+      {
+        "type": "file",
+        "value": "vite.config.ts"
+      },
+      {
+        "type": "file",
+        "value": "package.json"
+      },
+      {
+        "type": "file",
+        "value": "package-lock.json"
+      },
+      {
+        "type": "file",
+        "value": "bun.lock"
+      },
+      {
+        "type": "file",
+        "value": "bun.lockb"
+      },
+      {
+        "type": "file",
+        "value": "pnpm-lock.yaml"
+      },
+      {
+        "type": "file",
+        "value": "AGENTS.md"
+      },
+      {
+        "type": "file",
+        "value": ".gitignore"
+      },
+      {
+        "type": "file",
+        "value": ".DS_Store"
+      },
+      {
+        "type": "file",
+        "value": "preview-qr.png"
+      }
+    ]
+  }
+}

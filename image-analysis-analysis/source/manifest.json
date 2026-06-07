@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://storage.googleapis.com/pie-prod-us-west1-media/images/73663674-8898-4903-9993-479639534994.png",
+  "generatedAt": "2026-05-01T15:32:59.775Z",
+  "totalSize": 0,
+  "engineHints": [],
+  "files": [],
+  "html": "",
+  "errors": [
+    "playwright 执行失败: Executable not found in $PATH: \"node\""
+  ]
+}
