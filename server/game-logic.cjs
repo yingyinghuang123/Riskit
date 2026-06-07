@@ -2,19 +2,18 @@
 
 // ==============================
 // RISKiT 共享游戏逻辑（前后端通用）
-// 更新于 2026-06：匹配官方规则书卡牌分布
+// 更新于 2026-06：完整功能牌系统
 // ==============================
 
 const THREAT_TYPES = ['crocodile', 'spider', 'scorpion', 'piranha', 'snake'];
 const THREAT_NAMES = { crocodile: '鳄鱼', spider: '蜘蛛', scorpion: '蝎子', piranha: '食人鱼', snake: '毒蛇' };
 
-// --- 牌组生成 ---
+// --- 基础牌组生成 (94张基础威胁 + 4张分裂 + 6张特殊效果 = 108张) ---
 function genCards() {
   const c = [];
   let id = 0;
 
   // 鳄鱼 18张：15普通(th=4) + 3死亡愿望(th=0,tv=0)
-  // 宝藏值分布：2×3, 3×3, 5×9
   const crocodileTreasures = [2,2,2, 3,3,3, 5,5,5,5,5,5,5,5,5];
   crocodileTreasures.forEach(tv => {
     c.push({ id: `crocodile_${id++}`, type: 'threat', threatType: 'crocodile', threatValue: 4, treasureValue: tv, special: null });
@@ -24,7 +23,6 @@ function genCards() {
   }
 
   // 蜘蛛 18张：10普通(th=2) + 5普通(th=5) + 3鸡毛(th=5,tv=0)
-  // 有宝藏15张分布：2×3, 3×3, 5×9
   const spiderTreasures = [2,2,2, 3,3,3, 5,5,5,5,5,5,5,5,5];
   spiderTreasures.slice(0, 10).forEach(tv => {
     c.push({ id: `spider_${id++}`, type: 'threat', threatType: 'spider', threatValue: 2, treasureValue: tv, special: null });
@@ -37,7 +35,6 @@ function genCards() {
   }
 
   // 蝎子 18张：10普通(th=2) + 5普通(th=5) + 3鸡毛(th=5,tv=0)
-  // 有宝藏15张分布：2×3, 3×6, 5×6
   const scorpionTreasures = [2,2,2, 3,3,3,3,3,3, 5,5,5,5,5,5];
   scorpionTreasures.slice(0, 10).forEach(tv => {
     c.push({ id: `scorpion_${id++}`, type: 'threat', threatType: 'scorpion', threatValue: 2, treasureValue: tv, special: null });
@@ -49,19 +46,19 @@ function genCards() {
     c.push({ id: `scorpion_${id++}`, type: 'threat', threatType: 'scorpion', threatValue: 5, treasureValue: 0, special: 'chicken_feather' });
   }
 
-  // 食人鱼 18张：全部(th=3)，宝藏分布：2×8, 3×5, 5×5
+  // 食人鱼 18张：全部(th=3)
   const piranhaTreasures = [2,2,2,2,2,2,2,2, 3,3,3,3,3, 5,5,5,5,5];
   piranhaTreasures.forEach(tv => {
     c.push({ id: `piranha_${id++}`, type: 'threat', threatType: 'piranha', threatValue: 3, treasureValue: tv, special: null });
   });
 
-  // 蛇 18张：全部(th=3)，宝藏分布：2×8, 3×5, 5×5
+  // 蛇 18张：全部(th=3)
   const snakeTreasures = [2,2,2,2,2,2,2,2, 3,3,3,3,3, 5,5,5,5,5];
   snakeTreasures.forEach(tv => {
     c.push({ id: `snake_${id++}`, type: 'threat', threatType: 'snake', threatValue: 3, treasureValue: tv, special: null });
   });
 
-  // 分裂牌 4张：食人鱼+蛇，th=3, tv=2
+  // 分裂牌 4张
   for (let i = 0; i < 4; i++) {
     c.push({ id: `split_${i}`, type: 'split', splitTypes: ['piranha', 'snake'], threatType: 'none', threatValue: 3, treasureValue: 2, special: null });
   }
@@ -69,7 +66,37 @@ function genCards() {
   return c;
 }
 
+// --- 功能牌生成 (16张) ---
+function genOptionalCards() {
+  const c = [];
+  // 3 贿赂
+  for (let i = 0; i < 3; i++) {
+    c.push({ id: `bribe_${i}`, type: 'bribe', threatType: 'none', threatValue: 0, treasureValue: 4, special: null });
+  }
+  // 3 背包
+  for (let i = 0; i < 3; i++) {
+    c.push({ id: `backpack_${i}`, type: 'backpack', threatType: 'none', threatValue: 0, treasureValue: 1, special: null });
+  }
+  // 3 黑豹汁
+  for (let i = 0; i < 3; i++) {
+    c.push({ id: `panther_juice_${i}`, type: 'panther_juice', threatType: 'none', threatValue: 0, treasureValue: 4, special: null });
+  }
+  // 3 厄运雕像
+  for (let i = 0; i < 3; i++) {
+    c.push({ id: `statue_${i}`, type: 'statue', threatType: 'none', threatValue: 0, treasureValue: 9, special: null });
+  }
+  // 3 砍刀
+  for (let i = 0; i < 3; i++) {
+    c.push({ id: `machete_${i}`, type: 'machete', threatType: 'none', threatValue: 0, treasureValue: 1, special: null });
+  }
+  // 1 卓柏卡布拉
+  c.push({ id: 'chupacabra', type: 'threat', threatType: 'chupacabra', threatValue: 0, treasureValue: 0, special: null });
+  return c;
+}
+
 const BASE_CARDS = genCards();
+const OPTIONAL_CARDS = genOptionalCards();
+const ALL_CARDS = [...BASE_CARDS, ...OPTIONAL_CARDS];
 
 // --- 工具函数 ---
 function shuffle(a) {
@@ -82,7 +109,7 @@ function shuffle(a) {
 }
 
 // --- 游戏状态创建 ---
-function createGame(playerIds, playerNames) {
+function createGame(playerIds, playerNames, includeOptional) {
   const ps = playerIds.map(id => ({
     id,
     name: playerNames[id] || id,
@@ -102,7 +129,7 @@ function createGame(playerIds, playerNames) {
     currentRound: null,
     roundNumber: 0,
     phase: 'waiting',
-    includeOptionalCards: false
+    includeOptionalCards: includeOptional !== false
   };
 }
 
@@ -110,7 +137,8 @@ function createGame(playerIds, playerNames) {
 function startRound(st) {
   const rn = st.roundNumber + 1;
   if (rn > 5) return { ...st, phase: 'game_over' };
-  const deck = shuffle(BASE_CARDS);
+  const cardsToUse = st.includeOptionalCards ? ALL_CARDS : BASE_CARDS;
+  const deck = shuffle(cardsToUse);
   const ps = st.players.map(p => ({
     ...p,
     outsideCards: [],
@@ -148,16 +176,14 @@ function startRound(st) {
 function getPlayerThreats(p) {
   const m = new Map();
   [...p.outsideCards, ...p.dangerZoneCards].forEach(c => {
-    if (c.def.type === 'split' && c.def.splitTypes) {
-      // 分裂牌用 assignedType
-      const t = c.assignedType || c.def.threatType;
-      if (t === 'none') return;
-      m.set(t, (m.get(t) || 0) + c.def.threatValue);
-    } else {
-      const t = c.assignedType || c.def.threatType;
-      if (t === 'none') return;
-      m.set(t, (m.get(t) || 0) + c.def.threatValue);
+    const t = c.assignedType || c.def.threatType;
+    if (t === 'none') return;
+    let val = c.def.threatValue;
+    // 卓柏卡布拉：累加吞入卡的威胁值
+    if (t === 'chupacabra' && c.tuckedCards) {
+      val += c.tuckedCards.reduce((s, tc) => s + tc.def.threatValue, 0);
     }
+    m.set(t, (m.get(t) || 0) + val);
   });
   return m;
 }
@@ -166,23 +192,13 @@ function updateDZ(p, lastDrawnType) {
   const t = getPlayerThreats(p);
   let mx = -1, mt = null;
   t.forEach((v, k) => {
-    if (v > mx) {
-      mx = v; mt = k;
-    } else if (v === mx && k === lastDrawnType) {
-      // 相等时后抽优先
-      mt = k;
-    }
+    if (v > mx) { mx = v; mt = k; }
+    else if (v === mx && k === lastDrawnType) { mt = k; }
   });
   const all = [...p.outsideCards, ...p.dangerZoneCards];
   if (mt) {
-    p.dangerZoneCards = all.filter(c => {
-      const ct = c.assignedType || c.def.threatType;
-      return ct === mt;
-    });
-    p.outsideCards = all.filter(c => {
-      const ct = c.assignedType || c.def.threatType;
-      return ct !== mt;
-    });
+    p.dangerZoneCards = all.filter(c => (c.assignedType || c.def.threatType) === mt);
+    p.outsideCards = all.filter(c => (c.assignedType || c.def.threatType) !== mt);
   } else {
     p.dangerZoneCards = [];
     p.outsideCards = all;
@@ -197,11 +213,16 @@ function getDZStacks(rd) {
     if (!m.has(t)) m.set(t, []);
     m.get(t).push(c);
   }));
-  return Array.from(m.entries()).map(([t, cs]) => ({
-    threatType: t,
-    cards: cs,
-    totalValue: cs.reduce((s, c) => s + c.def.threatValue, 0)
-  }));
+  return Array.from(m.entries()).map(([t, cs]) => {
+    let totalValue = 0;
+    cs.forEach(c => {
+      totalValue += c.def.threatValue;
+      if (t === 'chupacabra' && c.tuckedCards) {
+        totalValue += c.tuckedCards.reduce((s, tc) => s + tc.def.threatValue, 0);
+      }
+    });
+    return { threatType: t, cards: cs, totalValue };
+  });
 }
 
 function checkBusts(rd) {
@@ -213,7 +234,6 @@ function handleBust(rd, p) {
   p.hasBusted = true;
   const tk = rd.exitTokens.shift();
   if (tk) p.exitToken = { ...tk, isCoffin: true };
-  // 死亡愿望：爆牌时危险区有此牌，将所有危险区卡加入得分堆
   if (p.dangerZoneCards.some(c => c.def.special === 'deathwish')) {
     p.scorePile.push(...p.dangerZoneCards);
     p.dangerZoneCards = [];
@@ -222,26 +242,84 @@ function handleBust(rd, p) {
 
 function nextP(rd) {
   const s = rd.currentPlayerIndex;
-  do {
-    rd.currentPlayerIndex = (rd.currentPlayerIndex + 1) % rd.players.length;
-  } while (!rd.players[rd.currentPlayerIndex].isActive && rd.currentPlayerIndex !== s);
+  do { rd.currentPlayerIndex = (rd.currentPlayerIndex + 1) % rd.players.length; }
+  while (!rd.players[rd.currentPlayerIndex].isActive && rd.currentPlayerIndex !== s);
 }
 
-// --- 卡牌结算 ---
+// --- 卡牌结算（含功能牌） ---
 function resolveCard(st, card) {
   const rd = st.currentRound, p = rd.players.find(x => x.id === card.ownerId);
-  if (card.def.type === 'threat') {
-    p.outsideCards.push(card);
-    updateDZ(p, card.assignedType || card.def.threatType);
-    return bustCont(st, card);
+
+  switch (card.def.type) {
+    case 'threat': {
+      if (card.def.threatType === 'chupacabra') {
+        // 卓柏卡布拉：放入外部区，初始化吞牌列表
+        p.outsideCards.push(card);
+        card.tuckedCards = [];
+      } else {
+        // 普通威胁卡：检查是否有卓柏卡布拉可以吞入
+        const chupa = p.outsideCards.find(c => c.def.threatType === 'chupacabra') ||
+                      p.dangerZoneCards.find(c => c.def.threatType === 'chupacabra');
+        if (chupa && chupa.tuckedCards) {
+          chupa.tuckedCards.push(card);
+        } else {
+          p.outsideCards.push(card);
+        }
+      }
+      updateDZ(p, card.assignedType || card.def.threatType);
+      return bustCont(st, card);
+    }
+
+    case 'split': {
+      rd.phase = 'resolve';
+      const options = card.def.splitTypes || ['piranha', 'snake'];
+      rd.inputRequest = { playerId: p.id, type: 'choose_split_type', options, cardId: card.id };
+      return { state: st, drawnCard: card, needsInput: rd.inputRequest };
+    }
+
+    case 'statue': {
+      rd.centerCards.push(card);
+      // 集满2张厄运雕像：全员爆牌
+      if (rd.centerCards.filter(c => c.def.type === 'statue').length >= 2) {
+        rd.players.filter(x => x.isActive).forEach(x => handleBust(rd, x));
+        rd.players.forEach(x => { if (x.isPantherJuiced) x.isPantherJuiced = false; });
+      }
+      return finTurn(st, card);
+    }
+
+    case 'backpack':
+    case 'machete': {
+      rd.centerCards.push(card);
+      return finTurn(st, card);
+    }
+
+    case 'bribe': {
+      // 贿赂：选择一个非豹汁标记的活跃玩家
+      const targets = rd.players.filter(x => x.isActive && x.id !== p.id && !x.isPantherJuiced);
+      if (targets.length === 0) {
+        rd.discardPile.push(card.def);
+        return finTurn(st, card);
+      }
+      rd.phase = 'resolve';
+      rd.inputRequest = { playerId: p.id, type: 'choose_panther_target', options: targets.map(t => t.id), cardId: card.id, cardType: 'bribe' };
+      return { state: st, drawnCard: card, needsInput: rd.inputRequest };
+    }
+
+    case 'panther_juice': {
+      // 黑豹汁：选择目标玩家标记
+      const targets = rd.players.filter(x => x.isActive && x.id !== p.id);
+      if (targets.length === 0) {
+        rd.discardPile.push(card.def);
+        return finTurn(st, card);
+      }
+      rd.phase = 'resolve';
+      rd.inputRequest = { playerId: p.id, type: 'choose_panther_target', options: targets.map(t => t.id), cardId: card.id, cardType: 'panther_juice' };
+      return { state: st, drawnCard: card, needsInput: rd.inputRequest };
+    }
+
+    default:
+      return finTurn(st, card);
   }
-  if (card.def.type === 'split') {
-    rd.phase = 'resolve';
-    const options = card.def.splitTypes || ['piranha', 'snake'];
-    rd.inputRequest = { playerId: p.id, type: 'choose_split_type', options, cardId: card.id };
-    return { state: st, drawnCard: card, needsInput: rd.inputRequest };
-  }
-  return finTurn(st, card);
 }
 
 function bustCont(st, card) {
@@ -249,7 +327,6 @@ function bustCont(st, card) {
   if (bt.length > 0) {
     rd.players.filter(p => p.isActive && p.dangerZoneCards.some(c => bt.includes(c.assignedType || c.def.threatType)))
       .forEach(p => handleBust(rd, p));
-    // 有人爆牌时解除黑豹汁锁定
     rd.players.forEach(p => { if (p.isPantherJuiced) p.isPantherJuiced = false; });
   }
   return finTurn(st, card);
@@ -268,7 +345,6 @@ function startColl(st, card) {
   if (rd.players.every(p => p.hasBusted)) {
     rd.phase = 'round_end';
   } else {
-    // 收集阶段准备：弃掉外部牌和无宝藏值的牌
     rd.players.forEach(p => {
       p.outsideCards.forEach(c => rd.discardPile.push(c.def));
       p.outsideCards = [];
@@ -278,6 +354,7 @@ function startColl(st, card) {
     });
     rd.phase = 'collecting';
     rd.collectingPlayerIndex = 0;
+    rd.consecutiveCollections = 0;
   }
   return { state: st, drawnCard: card };
 }
@@ -297,7 +374,6 @@ function playerExit(st, pid) {
   }
   const tk = rd.exitTokens.shift();
   if (tk) p.exitToken = tk;
-  // 最后一个退出标记被拿走时，剩余唯一玩家获得美洲豹标记
   if (rd.exitTokens.length === 0) {
     const lp = rd.players.find(x => x.isActive);
     if (lp) {
@@ -316,7 +392,18 @@ function playerExit(st, pid) {
 
 function drawCard(st) {
   const rd = st.currentRound;
-  if (!rd || rd.phase !== 'draw') return { state: st };
+  if (!rd || (rd.phase !== 'draw' && rd.phase !== 'machete_window')) return { state: st };
+
+  // 砍刀窗口：检查是否有活跃玩家持有砍刀
+  if (rd.phase === 'draw') {
+    const pWithMachete = rd.players.filter(p => p.isActive && p.collectedMachetes && p.collectedMachetes.length > 0);
+    if (pWithMachete.length > 0) {
+      rd.phase = 'machete_window';
+      rd.inputRequest = { playerId: pWithMachete[0].id, type: 'choose_machete_use', options: ['yes', 'no'] };
+      return { state: st, needsInput: rd.inputRequest };
+    }
+  }
+
   const cd = rd.deck.shift();
   if (!cd) return { state: st };
   const p = rd.players[rd.currentPlayerIndex];
@@ -333,17 +420,35 @@ function collectTreasure(st, pid, target) {
     .sort((a, b) => a.exitToken.number - b.exitToken.number);
   const cp = sp[rd.collectingPlayerIndex];
   if (!cp || cp.id !== pid) return st;
+
   if (target === 'center') {
     const c = rd.centerCards.shift();
-    if (c) cp.scorePile.push(c);
+    if (c) {
+      if (c.def.type === 'backpack') {
+        if (!cp.collectedBackpacks) cp.collectedBackpacks = [];
+        cp.collectedBackpacks.push(c);
+      } else if (c.def.type === 'machete') {
+        if (!cp.collectedMachetes) cp.collectedMachetes = [];
+        cp.collectedMachetes.push(c);
+      } else {
+        cp.scorePile.push(c);
+      }
+    }
   } else {
-    // 收集任何玩家面前的危险区所有牌
     const tp = rd.players.find(p => p.id === target);
     if (tp && tp.dangerZoneCards.length > 0) {
       cp.scorePile.push(...tp.dangerZoneCards);
       tp.dangerZoneCards = [];
     }
   }
+
+  // 背包额外收集检查
+  if (cp.collectedBackpacks && cp.collectedBackpacks.length > 0 && rd.consecutiveCollections === 0) {
+    rd.inputRequest = { playerId: cp.id, type: 'choose_backpack_use', options: ['yes', 'no'] };
+    return st;
+  }
+
+  rd.consecutiveCollections = 0;
   moveNext(rd);
   return st;
 }
@@ -353,7 +458,6 @@ function moveNext(rd) {
     .sort((a, b) => a.exitToken.number - b.exitToken.number);
   if (sp.length === 0) { rd.phase = 'round_end'; return; }
   rd.collectingPlayerIndex = (rd.collectingPlayerIndex + 1) % sp.length;
-  // 所有危险区牌拿完且无中心卡时结束
   if (!rd.players.some(p => p.dangerZoneCards.length > 0) && rd.centerCards.length === 0)
     rd.phase = 'round_end';
 }
@@ -363,24 +467,74 @@ function resolveInput(st, inp) {
   if (!rd) return st;
   rd.inputRequest = null;
   const p = rd.players.find(x => x.id === inp.playerId);
-  if (inp.type === 'choose_split_type' && rd.lastDrawnCard) {
-    rd.lastDrawnCard.assignedType = inp.value;
-    p.outsideCards.push(rd.lastDrawnCard);
-    updateDZ(p, inp.value);
-    // 检查爆牌
-    const bt = checkBusts(rd);
-    if (bt.length > 0) {
-      rd.players.filter(x => x.isActive && x.dangerZoneCards.some(c => bt.includes(c.assignedType || c.def.threatType)))
-        .forEach(x => handleBust(rd, x));
-      rd.players.forEach(x => { if (x.isPantherJuiced) x.isPantherJuiced = false; });
+
+  switch (inp.type) {
+    case 'choose_split_type': {
+      if (rd.lastDrawnCard) {
+        rd.lastDrawnCard.assignedType = inp.value;
+        p.outsideCards.push(rd.lastDrawnCard);
+        updateDZ(p, inp.value);
+        const bt = checkBusts(rd);
+        if (bt.length > 0) {
+          rd.players.filter(x => x.isActive && x.dangerZoneCards.some(c => bt.includes(c.assignedType || c.def.threatType)))
+            .forEach(x => handleBust(rd, x));
+          rd.players.forEach(x => { if (x.isPantherJuiced) x.isPantherJuiced = false; });
+        }
+        if (rd.players.every(x => !x.isActive)) {
+          startColl(st, rd.lastDrawnCard);
+        } else {
+          nextP(rd);
+          rd.phase = 'exit_window';
+        }
+      }
+      break;
     }
-    if (rd.players.every(x => !x.isActive)) {
-      startColl(st, rd.lastDrawnCard);
-    } else {
+
+    case 'choose_panther_target': {
+      const target = rd.players.find(x => x.id === inp.value);
+      if (!target) break;
+      const cardType = (rd.lastDrawnCard && rd.lastDrawnCard.def.type) || inp.cardType;
+      if (cardType === 'panther_juice') {
+        target.isPantherJuiced = true;
+      } else if (cardType === 'bribe') {
+        // 贿赂：夺取目标危险区的所有牌
+        const dzCards = [...target.dangerZoneCards];
+        p.outsideCards.push(...dzCards);
+        target.dangerZoneCards = [];
+        updateDZ(p, undefined);
+      }
       nextP(rd);
       rd.phase = 'exit_window';
+      break;
+    }
+
+    case 'choose_machete_use': {
+      if (inp.value === 'yes') {
+        if (!p.collectedMachetes) p.collectedMachetes = [];
+        const machete = p.collectedMachetes.shift();
+        if (machete) rd.discardPile.push(machete.def);
+        // 跳过当前抽牌（消耗牌堆顶一张）
+        const skipped = rd.deck.shift();
+        if (skipped) rd.discardPile.push(skipped);
+      }
+      rd.phase = 'draw';
+      break;
+    }
+
+    case 'choose_backpack_use': {
+      if (inp.value === 'yes' && p.collectedBackpacks && p.collectedBackpacks.length > 0) {
+        const bp = p.collectedBackpacks.shift();
+        if (bp) rd.discardPile.push(bp.def);
+        rd.consecutiveCollections = 1;
+        // 允许再次收集（不移动到下一位）
+      } else {
+        rd.consecutiveCollections = 0;
+        moveNext(rd);
+      }
+      break;
     }
   }
+
   return st;
 }
 
@@ -408,9 +562,21 @@ function getScore(st, pid) {
 function aiDecide(rd, aid) {
   const p = rd.players.find(x => x.id === aid);
   if (!p || !p.isActive) return null;
+
+  // 处理 inputRequest
   if (rd.inputRequest && rd.inputRequest.playerId === aid) {
-    return { type: 'choose_split', playerId: aid, data: rd.inputRequest.options[Math.floor(Math.random() * rd.inputRequest.options.length)] };
+    switch (rd.inputRequest.type) {
+      case 'choose_split_type':
+        return { type: 'choose_split', playerId: aid, data: rd.inputRequest.options[Math.floor(Math.random() * rd.inputRequest.options.length)] };
+      case 'choose_panther_target':
+        return { type: 'choose_panther_target', playerId: aid, data: rd.inputRequest.options[Math.floor(Math.random() * rd.inputRequest.options.length)] };
+      case 'choose_machete_use':
+        return { type: 'choose_machete_use', playerId: aid, data: Math.random() > 0.5 ? 'yes' : 'no' };
+      case 'choose_backpack_use':
+        return { type: 'choose_backpack_use', playerId: aid, data: 'yes' };
+    }
   }
+
   if (rd.phase === 'exit_window') {
     const th = getPlayerThreats(p);
     let mx = 0;
@@ -425,19 +591,26 @@ function aiDecide(rd, aid) {
       return { type: 'draw', playerId: aid };
     return null;
   }
+
   if (rd.players[rd.currentPlayerIndex]?.id !== aid) return null;
   if (rd.phase === 'draw') return { type: 'draw', playerId: aid };
+
   if (rd.phase === 'collecting') {
     const sp = rd.players.filter(x => x.exitToken && !x.exitToken.isCoffin)
       .sort((a, b) => a.exitToken.number - b.exitToken.number);
     if (sp[rd.collectingPlayerIndex]?.id === aid) {
       // 优先选宝藏值最高的牌堆
       const targets = rd.players.filter(x => x.dangerZoneCards.length > 0);
-      const bestTarget = targets.sort((a, b) =>
-        b.dangerZoneCards.reduce((s, c) => s + c.def.treasureValue, 0) -
-        a.dangerZoneCards.reduce((s, c) => s + c.def.treasureValue, 0)
-      )[0];
-      return { type: 'collect_treasure', playerId: aid, data: bestTarget ? bestTarget.id : 'center' };
+      if (targets.length > 0) {
+        const bestTarget = targets.sort((a, b) =>
+          b.dangerZoneCards.reduce((s, c) => s + c.def.treasureValue, 0) -
+          a.dangerZoneCards.reduce((s, c) => s + c.def.treasureValue, 0)
+        )[0];
+        return { type: 'collect_treasure', playerId: aid, data: bestTarget.id };
+      }
+      if (rd.centerCards.length > 0) {
+        return { type: 'collect_treasure', playerId: aid, data: 'center' };
+      }
     }
   }
   return null;
@@ -446,8 +619,8 @@ function aiDecide(rd, aid) {
 // --- 导出 ---
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    THREAT_TYPES, THREAT_NAMES, BASE_CARDS,
-    genCards, shuffle, createGame, startRound,
+    THREAT_TYPES, THREAT_NAMES, BASE_CARDS, OPTIONAL_CARDS, ALL_CARDS,
+    genCards, genOptionalCards, shuffle, createGame, startRound,
     getPlayerThreats, updateDZ, getDZStacks, checkBusts, handleBust, nextP,
     resolveCard, bustCont, finTurn, startColl,
     playerExit, drawCard, collectTreasure, moveNext, resolveInput,
