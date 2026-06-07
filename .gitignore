@@ -5,3 +5,12 @@ game.js
 preview-qr.png
 *.log
 .DS_Store
+*.zip
+tmp/
+test_download.png
+target_image.png
+temp.js
+test-image-analysis/
+test_image-analysis/
+push-to-github.sh
+push-to-github.js
