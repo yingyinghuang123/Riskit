@@ -36,7 +36,7 @@ export function updatePlayerDangerZone(player: PlayerState, lastDrawnType?: Thre
 export function getDangerZoneStacks(round: RoundState): ThreatStack[] {
   const stacks = new Map<ThreatType, CardInstance[]>();
   round.players.forEach(p => {
-    p.dangerZoneCards.forEach(c => {
+    [...p.outsideCards, ...p.dangerZoneCards].forEach(c => {
       const type = c.assignedType || c.def.threatType;
       if (!stacks.has(type)) stacks.set(type, []);
       stacks.get(type)!.push(c);

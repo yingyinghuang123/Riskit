@@ -207,12 +207,14 @@ function updateDZ(p, lastDrawnType) {
 
 function getDZStacks(rd) {
   const m = new Map();
-  rd.players.forEach(p => p.dangerZoneCards.forEach(c => {
-    const t = c.assignedType || c.def.threatType;
-    if (t === 'none') return;
-    if (!m.has(t)) m.set(t, []);
-    m.get(t).push(c);
-  }));
+  rd.players.forEach(p => {
+    [...p.outsideCards, ...p.dangerZoneCards].forEach(c => {
+      const t = c.assignedType || c.def.threatType;
+      if (t === 'none') return;
+      if (!m.has(t)) m.set(t, []);
+      m.get(t).push(c);
+    });
+  });
   return Array.from(m.entries()).map(([t, cs]) => {
     let totalValue = 0;
     cs.forEach(c => {
