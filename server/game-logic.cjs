@@ -327,7 +327,7 @@ function resolveCard(st, card) {
 function bustCont(st, card) {
   const rd = st.currentRound, bt = checkBusts(rd);
   if (bt.length > 0) {
-    rd.players.filter(p => p.isActive && p.dangerZoneCards.some(c => bt.includes(c.assignedType || c.def.threatType)))
+    rd.players.filter(p => p.isActive && [...p.outsideCards, ...p.dangerZoneCards].some(c => bt.includes(c.assignedType || c.def.threatType)))
       .forEach(p => handleBust(rd, p));
     rd.players.forEach(p => { if (p.isPantherJuiced) p.isPantherJuiced = false; });
   }

@@ -5,7 +5,7 @@ echo "📦 Adding changes..."
 git add -A
 
 echo "📝 Committing..."
-git commit -m "fix: 危险区改为全场累加显示 + 加入功能牌系统(贿赂/背包/豹汁/雕像/砍刀/卓柏卡布拉)"
+git commit -m "feat: 完善功能牌逻辑+UI展示(卓柏卡布拉吞牌/背包砍刀暂存/豹汁标记/中央卡牌/爆牌判定修复)"
 
 echo "🚀 Pushing to GitHub..."
 git push origin main 2>&1
